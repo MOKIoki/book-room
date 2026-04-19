@@ -267,8 +267,8 @@ export default function Page() {
 
   // Realtime subscription: reload on any change
   useEffect(() => {
-    const channel = supabase
-      .channel("global-changes")
+   const channel = supabase
+      .channel(`global-changes-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
@@ -322,7 +322,17 @@ export default function Page() {
     return () => document.removeEventListener("visibilitychange", onVisibility);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+// Polling fallback: Realtime が届かなかった場合の保険。
+  // タブがアクティブな間だけ動くので負荷は最小限。
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadAll({ silent: true });
+      }
+    }, 15_000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const currentBook =
     page.type !== "top" ? books.find((b) => b.id === page.bookId) ?? null : null;
   const currentRoom =
