@@ -215,9 +215,7 @@ export default function BookPage({
   (a, b) =>
     new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
 );
-    (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-  );
+
 
   const roomLimitReached = visibleRooms.length >= MAX_ACTIVE_ROOMS_PER_BOOK;
 
