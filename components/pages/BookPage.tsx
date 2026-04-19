@@ -211,7 +211,10 @@ export default function BookPage({
 }: BookPageProps) {
   useNow();
 
-  const visibleRooms = [...getActiveRooms(book.rooms)].sort(
+  const visibleRooms = [...book.rooms].sort(
+  (a, b) =>
+    new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+);
     (a, b) =>
       new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
   );
