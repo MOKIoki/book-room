@@ -240,7 +240,11 @@ export default function Page() {
       const traces: BookTrace[] = tracesData.filter((t) => t.book_id === book.id);
       return { ...book, rooms, traces };
     });
-
+    
+     console.log("booksData", booksData);
+     console.log("roomsData", roomsData);
+     console.log("merged", merged);
+    
     setBooks(merged);
     setProfiles(profilesData);
     if (!options.silent) setLoading(false);
