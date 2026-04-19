@@ -20,7 +20,8 @@ import type {
   UserProfile,
   ProfileRecord,
 } from "@/lib/types";
-
+ import BookPage from "@/components/pages/BookPage";
+ import TopPage from "@/components/pages/TopPage";
 
 const spoilerMap = {
   none: { label: "未読歓迎", variant: "secondary" as const },
@@ -275,93 +276,6 @@ function AddBookDialog({
   );
 }
 
-
-function BookPage({
-  book,
-  onBack,
-  onEnterRoom,
-  onCreateRoom,
-}: {
-  book: Book;
-  onBack: () => void;
-  onEnterRoom: (roomId: number) => void;
-  onCreateRoom: () => void;
-}) {
-  const visibleRooms = book.rooms.filter((room) => !isRoomExpired(room));
-
-  return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <Button variant="ghost" className="mb-4 rounded-2xl" onClick={onBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          戻る
-        </Button>
-
-        <Card className="rounded-3xl border-0 shadow-sm">
-          <CardHeader className="p-8">
-            <div className="mb-2 text-sm text-neutral-500">{book.author}</div>
-            <CardTitle className="text-3xl">{book.title}</CardTitle>
-            <CardDescription className="max-w-3xl pt-2 text-base leading-7">
-              {book.description}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <div className="mt-6">
-          <Card className="rounded-3xl border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-xl">この本の部屋</CardTitle>
-                <CardDescription>期限切れの部屋は表示されません。</CardDescription>
-              </div>
-              <Button className="gap-2 rounded-2xl" onClick={onCreateRoom}>
-                <Plus className="h-4 w-4" />
-                部屋を作る
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {visibleRooms.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-neutral-300 p-8 text-center">
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-                    <MessageSquare className="h-5 w-5 text-neutral-500" />
-                  </div>
-                  <div className="mb-2 font-medium">いま表示できる部屋はありません</div>
-                  <Button className="rounded-2xl" onClick={onCreateRoom}>
-                    最初の部屋を作る
-                  </Button>
-                </div>
-              ) : (
-                visibleRooms.map((room) => (
-                  <div key={room.id} className="rounded-3xl border border-neutral-200 p-5">
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-lg font-medium leading-7">{room.title}</div>
-                        <div className="mt-2">
-                          <RoomBadge room={room} />
-                        </div>
-                      </div>
-                      <Button variant="outline" className="rounded-2xl" onClick={() => onEnterRoom(room.id)}>
-                        入る
-                      </Button>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-neutral-500">
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {room.active_users}人
-                      </span>
-                      <span>{formatRelativeTime(room.updated_at)}</span>
-                      <span>{formatExpiresAt(room.expires_at)}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ExpiredRoomPage({
   onBack,
@@ -910,5 +824,108 @@ useEffect(() => {
   if (loading) {
     return <div className="p-8">読み込み中...</div>;
   }
-  return <div className="p-8">Page test</div>;
+
+  return (
+    <>
+      {page.type === "top" && (
+        <TopPage
+          books={books}
+          profiles={profiles}
+          onOpenBook={(bookId) => setPage({ type: "book", bookId })}
+          onEnterActiveRoom={handleEnterRoom}
+          currentProfile={profile}
+          onOpenProfileSetting={() => setProfileDialogOpen(true)}
+          onOpenMyLog={() => setMyLogOpen(true)}
+          onClearLocalProfile={clearLocalProfile}
+          onOpenAddBook={() => setAddBookOpen(true)}
+          onOpenContact={() => setContactOpen(true)}
+          onOpenMobileMenu={() => setProfileMenuOpen(true)}
+          recentHeats={recentHeats}
+          unreadCount={myLogUnreadCount}
+          hasReminder={hasReservationReminder}
+        />
+      )}
+
+      {page.type === "book" && currentBook && (
+        <BookPage
+          book={currentBook}
+          onBack={() => setPage({ type: "top" })}
+          onEnterRoom={(roomId) => handleEnterRoom(currentBook.id, roomId)}
+          onCreateRoom={() => setCreateOpen(true)}
+          onEditBook={() => {}}
+          currentProfile={profile}
+          onOpenProfileSetting={() => setProfileDialogOpen(true)}
+          onOpenMobileMenu={() => setProfileMenuOpen(true)}
+        />
+      )}
+
+      {page.type === "room" && currentBook && currentRoom && currentRoomExpired && (
+        <ExpiredRoomPage
+          onBack={() => setPage({ type: "book", bookId: currentBook.id })}
+        />
+      )}
+
+      {page.type === "room" && currentBook && currentRoom && !currentRoomExpired && (
+        <RoomPage
+          book={currentBook}
+          room={currentRoom}
+          onBack={() => setPage({ type: "book", bookId: currentBook.id })}
+          onSendMessage={sendMessage}
+          onDeleteRoom={() => deleteRoom(currentRoom.id)}
+        />
+      )}
+
+      <CreateRoomDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreate={createRoom}
+      />
+
+      <AddBookDialog
+        open={addBookOpen}
+        onOpenChange={setAddBookOpen}
+        onCreate={createBook}
+      />
+
+      <Dialog open={myLogOpen} onOpenChange={setMyLogOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>自分の記録</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-neutral-600">
+            この画面は分割の都合で一時的に簡略表示しています。
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>管理人に伝える</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-neutral-600">
+            この画面は分割の都合で一時的に簡略表示しています。
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>メニュー</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-neutral-600">
+            分割後にこのメニューを順次戻します。
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <NameSetupDialog
+        open={profileDialogOpen}
+        initialName={profile?.name ?? ""}
+        initialColor={profile?.color ?? "slate"}
+        onSave={saveProfile}
+      />
+    </>
+  );
 }
