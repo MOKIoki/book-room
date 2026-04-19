@@ -417,7 +417,7 @@ export default function RoomPage({
           </CardContent>
         </Card>
 
-        {!isBeforeStart && inFinalHour && (
+       {!isBeforeStart && (
           <Card className="mt-6 rounded-3xl border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -425,7 +425,7 @@ export default function RoomPage({
                 置き手紙を残す
               </CardTitle>
               <div className="text-sm text-neutral-500">
-                部屋の終了後、本のページに短いメッセージとして残ります（30日間・最大4件）。
+                部屋の終了後に公開され、本のページに短いメッセージとして残ります（30日間・最大4件）。いつでも書けます。
               </div>
             </CardHeader>
             <CardContent>
