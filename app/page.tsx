@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Search, BookOpen, MessageSquare, Users, Plus, ArrowLeft, Lock, DoorOpen } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type {
   Message,
   Reservation,
@@ -20,70 +17,18 @@ import type {
   UserProfile,
   ProfileRecord,
 } from "@/lib/types";
- import BookPage from "@/components/pages/BookPage";
- import TopPage from "@/components/pages/TopPage";
- import RoomPage from "@/components/pages/RoomPage";
- import ExpiredRoomPage from "@/components/pages/ExpiredRoomPage";
- import AddBookDialog from "@/components/dialogs/AddBookDialog";
- import NameSetupDialog from "@/components/dialogs/NameSetupDialog";
- import CreateRoomDialog from "@/components/dialogs/CreateRoomDialog";
+import BookPage from "@/components/pages/BookPage";
+import TopPage from "@/components/pages/TopPage";
+import RoomPage from "@/components/pages/RoomPage";
+import ExpiredRoomPage from "@/components/pages/ExpiredRoomPage";
+import AddBookDialog from "@/components/dialogs/AddBookDialog";
+import NameSetupDialog from "@/components/dialogs/NameSetupDialog";
+import CreateRoomDialog from "@/components/dialogs/CreateRoomDialog";
 
-const spoilerMap = {
-  none: { label: "未読歓迎", variant: "secondary" as const },
-  progress: { label: "途中まで", variant: "outline" as const },
-  read: { label: "読了者向け", variant: "default" as const },
-};
-
-const entryMap = {
-  welcome: { label: "ふらっと歓迎", icon: DoorOpen },
-  deep: { label: "じっくり対話", icon: MessageSquare },
-  small: { label: "少人数向け", icon: Lock },
-  open: { label: "ふらっと歓迎", icon: DoorOpen },
-  approval: { label: "少人数向け", icon: Lock },
-} as const;
-
-const colorOptions = [
-  { value: "slate", label: "グレー", bubble: "bg-slate-100 text-slate-800", chip: "bg-slate-500", name: "text-slate-700" },
-  { value: "red", label: "赤", bubble: "bg-red-100 text-red-900", chip: "bg-red-500", name: "text-red-700" },
-  { value: "blue", label: "青", bubble: "bg-blue-100 text-blue-900", chip: "bg-blue-500", name: "text-blue-700" },
-  { value: "green", label: "緑", bubble: "bg-green-100 text-green-900", chip: "bg-green-500", name: "text-green-700" },
-  { value: "purple", label: "紫", bubble: "bg-purple-100 text-purple-900", chip: "bg-purple-500", name: "text-purple-700" },
-  { value: "amber", label: "黄", bubble: "bg-amber-100 text-amber-900", chip: "bg-amber-500", name: "text-amber-700" },
-] as const;
-
-function getColorStyle(color?: string | null) {
-  return colorOptions.find((c) => c.value === color) ?? colorOptions[0];
-}
-
-function isRoomExpired(room: Room) {
-  if (!room.expires_at) return false;
-  return new Date(room.expires_at).getTime() <= Date.now();
-}
-
-function formatRelativeTime(value: string) {
-  const date = new Date(value);
-  const diffMs = Date.now() - date.getTime();
-  const diffMin = Math.floor(diffMs / 1000 / 60);
-  if (diffMin < 1) return "たった今";
-  if (diffMin < 60) return `${diffMin}分前`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}時間前`;
-  const diffDay = Math.floor(diffHour / 24);
-  return `${diffDay}日前`;
-}
-
-function formatExpiresAt(value: string | null) {
-  if (!value) return "期限なし";
-  const date = new Date(value);
-  const diffMs = date.getTime() - Date.now();
-  const diffMin = Math.floor(diffMs / 1000 / 60);
-  if (diffMin <= 0) return "終了";
-  if (diffMin < 60) return `残り${diffMin}分`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `残り${diffHour}時間`;
-  const diffDay = Math.floor(diffHour / 24);
-  return `残り${diffDay}日`;
-}
+type PageState =
+  | { type: "top" }
+  | { type: "book"; bookId: string }
+  | { type: "room"; bookId: string; roomId: number };
 
 function slugifyTitle(title: string) {
   return title
@@ -94,157 +39,294 @@ function slugifyTitle(title: string) {
     .slice(0, 60);
 }
 
-function RoomBadge({ room }: { room: Room }) {
-  const EntryIcon = entryMap[room.entry_type].icon;
-  return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
-      <Badge variant="outline" className="gap-1 rounded-full">
-        <EntryIcon className="h-3 w-3" />
-        {entryMap[room.entry_type].label}
-      </Badge>
-      <Badge variant={spoilerMap[room.spoiler].variant} className="rounded-full">
-        {spoilerMap[room.spoiler].label}
-      </Badge>
-    </div>
-  );
+function isRoomExpired(room: Room) {
+  if (!room.expires_at) return false;
+  return new Date(room.expires_at).getTime() <= Date.now();
 }
 
+function pageToPath(p: PageState) {
+  if (p.type === "top") return "/";
+  if (p.type === "book") return `/b/${p.bookId}`;
+  return `/b/${p.bookId}/r/${p.roomId}`;
+}
+
+function parsePath(pathname: string): PageState {
+  const m = pathname.match(/^\/b\/([^/]+)(?:\/r\/(\d+))?\/?$/);
+  if (!m) return { type: "top" };
+  const [, bookId, roomIdStr] = m;
+  if (roomIdStr) return { type: "room", bookId, roomId: Number(roomIdStr) };
+  return { type: "book", bookId };
+}
 
 export default function Page() {
   const [books, setBooks] = useState<Book[]>([]);
-  const [page, setPage] = useState<
-    { type: "top" } |
-    { type: "book"; bookId: string } |
-    { type: "room"; bookId: string; roomId: number }
-  >({ type: "top" });
+  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
+  const [page, setPageState] = useState<PageState>({ type: "top" });
   const [createOpen, setCreateOpen] = useState(false);
   const [addBookOpen, setAddBookOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [myProfileId, setMyProfileId] = useState<number | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-  const [pendingEntry, setPendingEntry] = useState<{ bookId: string; roomId: number } | null>(null);
+  const [pendingEntry, setPendingEntry] = useState<
+    { bookId: string; roomId: number } | null
+  >(null);
 
-  const [profiles] = useState<ProfileRecord[]>([]);
   const [myLogOpen, setMyLogOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-useEffect(() => {
-  if (typeof window === "undefined") return;
+  const isPopStateRef = useRef(false);
+  const firstLoadRef = useRef(true);
 
-  const saved = window.localStorage.getItem("book-room-profile");
-  if (!saved) return;
+  // Wrap page state setter with pushState
+  const setPage = (next: PageState) => {
+    setPageState(next);
+    if (typeof window !== "undefined" && !isPopStateRef.current) {
+      const path = pageToPath(next);
+      if (window.location.pathname !== path) {
+        window.history.pushState(null, "", path);
+      }
+    }
+    isPopStateRef.current = false;
+  };
 
-  try {
-    setProfile(JSON.parse(saved));
-  } catch {
-    setProfile(null);
-  }
-}, []);
+  // Initial: load profile, restore page from URL, attach popstate
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const saved = window.localStorage.getItem("book-room-profile");
+    if (saved) {
+      try {
+        setProfile(JSON.parse(saved));
+      } catch {
+        setProfile(null);
+      }
+    }
+
+    const parsed = parsePath(window.location.pathname);
+    if (parsed.type !== "top") {
+      setPageState(parsed);
+    }
+
+    const onPop = () => {
+      isPopStateRef.current = true;
+      setPageState(parsePath(window.location.pathname));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // Upsert ProfileRecord whenever local profile changes
+  useEffect(() => {
+    if (!profile) {
+      setMyProfileId(null);
+      return;
+    }
+    (async () => {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("name", profile.name)
+        .eq("color", profile.color)
+        .maybeSingle();
+      if (existing) {
+        setMyProfileId(existing.id);
+        return;
+      }
+      const { data: inserted, error } = await supabase
+        .from("profiles")
+        .insert({
+          name: profile.name,
+          color: profile.color,
+          favorite_book_id: profile.favoriteBookId ?? null,
+          favorite_note: profile.favoriteNote ?? null,
+          passphrase: profile.passphrase ?? null,
+        })
+        .select()
+        .single();
+      if (!error && inserted) setMyProfileId(inserted.id);
+    })();
+  }, [profile?.name, profile?.color]);
 
   const saveProfile = (nextProfile: UserProfile) => {
     setProfile(nextProfile);
     localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
-
     if (pendingEntry) {
-      setPage({ type: "room", bookId: pendingEntry.bookId, roomId: pendingEntry.roomId });
+      setPage({
+        type: "room",
+        bookId: pendingEntry.bookId,
+        roomId: pendingEntry.roomId,
+      });
       setPendingEntry(null);
     }
-
     setProfileDialogOpen(false);
   };
 
   const clearLocalProfile = () => {
     localStorage.removeItem("book-room-profile");
     setProfile(null);
+    setMyProfileId(null);
   };
 
-  const recentHeats: {
-    bookId: string;
-    bookTitle: string;
-    body: string;
-    roomTitle: string | null;
-    createdAt: string;
-  }[] = [];
+  const loadAll = async (options: { silent?: boolean } = {}) => {
+    if (!options.silent) setLoading(true);
 
-  const myLogUnreadCount = 0;
-  const hasReservationReminder = false;
-
-  const loadAll = async () => {
-    setLoading(true);
-
-    const { data: booksData, error: booksError } = await supabase
-      .from("books")
-      .select("*")
-      .order("title", { ascending: true });
-
-    if (booksError) {
-      console.error(booksError);
-      setLoading(false);
-      return;
-    }
-
-    const { data: roomsData, error: roomsError } = await supabase
-      .from("rooms")
-      .select("*")
-      .order("updated_at", { ascending: false });
-
-    if (roomsError) {
-      console.error(roomsError);
-      setLoading(false);
-      return;
-    }
-
-    const roomIds = (roomsData ?? []).map((r) => r.id);
-
-    let messagesData: Message[] = [];
-    if (roomIds.length > 0) {
-      const { data, error } = await supabase
-        .from("messages")
+    const [booksRes, roomsRes, tracesRes, profilesRes] = await Promise.all([
+      supabase.from("books").select("*").order("title", { ascending: true }),
+      supabase.from("rooms").select("*").order("updated_at", { ascending: false }),
+      supabase
+        .from("book_traces")
         .select("*")
-        .in("room_id", roomIds)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false }),
+      supabase.from("profiles").select("*"),
+    ]);
 
-      if (error) {
-        console.error(error);
-        setLoading(false);
+    if (booksRes.error || roomsRes.error || tracesRes.error || profilesRes.error) {
+      console.error(
+        booksRes.error ?? roomsRes.error ?? tracesRes.error ?? profilesRes.error,
+      );
+      if (!options.silent) setLoading(false);
+      return;
+    }
+
+    const roomIds = (roomsRes.data ?? []).map((r) => r.id);
+    let messagesData: Message[] = [];
+    let reservationsData: Reservation[] = [];
+    if (roomIds.length > 0) {
+      const [msgRes, resRes] = await Promise.all([
+        supabase
+          .from("messages")
+          .select("*")
+          .in("room_id", roomIds)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("reservations")
+          .select("*")
+          .in("room_id", roomIds)
+          .order("created_at", { ascending: true }),
+      ]);
+      if (msgRes.error || resRes.error) {
+        console.error(msgRes.error ?? resRes.error);
+        if (!options.silent) setLoading(false);
         return;
       }
-      messagesData = data ?? [];
+      messagesData = msgRes.data ?? [];
+      reservationsData = resRes.data ?? [];
     }
 
-    const merged: Book[] = (booksData ?? []).map((book) => {
-      const rooms = (roomsData ?? [])
+    const merged: Book[] = (booksRes.data ?? []).map((book) => {
+      const rooms: Room[] = (roomsRes.data ?? [])
         .filter((room) => room.book_id === book.id)
         .map((room) => ({
           ...room,
           messages: messagesData.filter((m) => m.room_id === room.id),
+          reservations: reservationsData.filter((r) => r.room_id === room.id),
         }));
-
-      return {
-        ...book,
-        rooms,
-      };
+      const traces: BookTrace[] = (tracesRes.data ?? []).filter(
+        (t) => t.book_id === book.id,
+      );
+      return { ...book, rooms, traces };
     });
 
     setBooks(merged);
-    setLoading(false);
+    setProfiles(profilesRes.data ?? []);
+    if (!options.silent) setLoading(false);
   };
 
+  // Initial full load + silent re-load on navigation
   useEffect(() => {
-    loadAll();
+    if (firstLoadRef.current) {
+      firstLoadRef.current = false;
+      loadAll();
+    } else {
+      loadAll({ silent: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  // Realtime subscription: reload on any change
+  useEffect(() => {
+    const channel = supabase
+      .channel("global-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        () => loadAll({ silent: true }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "rooms" },
+        () => loadAll({ silent: true }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "rooms" },
+        () => loadAll({ silent: true }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "rooms" },
+        () => loadAll({ silent: true }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "reservations" },
+        () => loadAll({ silent: true }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "reservations" },
+        () => loadAll({ silent: true }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "book_traces" },
+        () => loadAll({ silent: true }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Visibility resync
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadAll({ silent: true });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentBook =
     page.type !== "top" ? books.find((b) => b.id === page.bookId) ?? null : null;
-
   const currentRoom =
     page.type === "room" && currentBook
       ? currentBook.rooms.find((r) => r.id === page.roomId) ?? null
       : null;
-
   const currentRoomExpired = currentRoom ? isRoomExpired(currentRoom) : false;
+
+  const recentHeats = useMemo(() => {
+    const heats = books.flatMap((book) =>
+      book.traces.map((trace) => ({
+        bookId: book.id,
+        bookTitle: book.title,
+        body: trace.body,
+        roomTitle: trace.room_title ?? null,
+        createdAt: trace.created_at,
+      })),
+    );
+    heats.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    return heats;
+  }, [books]);
 
   const handleEnterRoom = (bookId: string, roomId: number) => {
     if (!profile) {
@@ -263,9 +345,10 @@ useEffect(() => {
     const baseId = slugifyTitle(payload.title);
     const nextId = baseId || `book-${Date.now()}`;
 
-    const exists = books.some((b) => b.id === nextId);
-    if (exists) {
-      alert("同じIDになりそうな本がすでにあります。タイトルを少し変えて追加してください。");
+    if (books.some((b) => b.id === nextId)) {
+      alert(
+        "同じIDになりそうな本がすでにあります。タイトルを少し変えて追加してください。",
+      );
       return;
     }
 
@@ -283,7 +366,7 @@ useEffect(() => {
     }
 
     setAddBookOpen(false);
-    await loadAll();
+    await loadAll({ silent: true });
   };
 
   const createRoom = async (payload: {
@@ -292,10 +375,16 @@ useEffect(() => {
     spoiler: "none" | "progress" | "read";
     durationHours: number;
     firstMessage: string;
+    scheduledStartAt: string | null;
   }) => {
     if (!currentBook) return;
 
-    const expiresAt = new Date(Date.now() + payload.durationHours * 60 * 60 * 1000).toISOString();
+    const baseMs = payload.scheduledStartAt
+      ? new Date(payload.scheduledStartAt).getTime()
+      : Date.now();
+    const expiresAt = new Date(
+      baseMs + payload.durationHours * 60 * 60 * 1000,
+    ).toISOString();
 
     const { data: insertedRoom, error: roomError } = await supabase
       .from("rooms")
@@ -306,6 +395,8 @@ useEffect(() => {
         spoiler: payload.spoiler,
         active_users: 1,
         expires_at: expiresAt,
+        scheduled_start_at: payload.scheduledStartAt,
+        created_by_profile_id: myProfileId,
       })
       .select()
       .single();
@@ -316,31 +407,42 @@ useEffect(() => {
       return;
     }
 
+    // Auto-reserve the creator as the first attendee
+    if (payload.scheduledStartAt && myProfileId) {
+      await supabase.from("reservations").insert({
+        room_id: insertedRoom.id,
+        profile_id: myProfileId,
+        profile_name: profile?.name ?? null,
+      });
+    }
+
     if (payload.firstMessage) {
       const sender = profile?.name ?? "you";
       const senderColor = profile?.color ?? "slate";
-
       const { error: messageError } = await supabase.from("messages").insert({
         room_id: insertedRoom.id,
         user_name: sender,
         user_color: senderColor,
         text: payload.firstMessage,
       });
-
-      if (messageError) {
-        console.error(messageError);
-        alert("最初の投稿の保存に失敗しました");
-        return;
-      }
+      if (messageError) console.error(messageError);
     }
 
     setCreateOpen(false);
-    await loadAll();
+    await loadAll({ silent: true });
     setPage({ type: "room", bookId: currentBook.id, roomId: insertedRoom.id });
   };
 
   const sendMessage = async (text: string) => {
     if (!currentRoom) return;
+
+    if (currentRoom.scheduled_start_at) {
+      const startMs = new Date(currentRoom.scheduled_start_at).getTime();
+      if (startMs > Date.now()) {
+        alert("予約読書会は開始日時まで投稿できません");
+        return;
+      }
+    }
 
     const sender = profile?.name ?? "you";
     const senderColor = profile?.color ?? "slate";
@@ -362,28 +464,80 @@ useEffect(() => {
       .from("rooms")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", currentRoom.id);
-
-    await loadAll();
   };
 
   const deleteRoom = async (roomId: number) => {
-    const { error } = await supabase
-      .from("rooms")
-      .delete()
-      .eq("id", roomId);
-
+    const { error } = await supabase.from("rooms").delete().eq("id", roomId);
     if (error) {
       console.error(error);
       alert(`部屋の削除に失敗しました: ${error.message}`);
       return;
     }
-
-    await loadAll();
-
+    await loadAll({ silent: true });
     if (currentBook) {
       setPage({ type: "book", bookId: currentBook.id });
     } else {
       setPage({ type: "top" });
+    }
+  };
+
+  const reserve = async () => {
+    if (!currentRoom || !myProfileId) {
+      alert("予約には名前の設定が必要です");
+      return;
+    }
+    const { error } = await supabase.from("reservations").insert({
+      room_id: currentRoom.id,
+      profile_id: myProfileId,
+      profile_name: profile?.name ?? null,
+    });
+    if (error) {
+      console.error(error);
+      alert(`予約できませんでした: ${error.message}`);
+    }
+  };
+
+  const cancelReservation = async () => {
+    if (!currentRoom || !myProfileId) return;
+    const { error } = await supabase
+      .from("reservations")
+      .delete()
+      .eq("room_id", currentRoom.id)
+      .eq("profile_id", myProfileId);
+    if (error) {
+      console.error(error);
+      alert(`キャンセルできませんでした: ${error.message}`);
+    }
+  };
+
+  const extendRoom = async (hours: number) => {
+    if (!currentRoom) return;
+    const base = currentRoom.expires_at
+      ? new Date(currentRoom.expires_at).getTime()
+      : Date.now();
+    const next = new Date(base + hours * 60 * 60 * 1000).toISOString();
+    const { error } = await supabase
+      .from("rooms")
+      .update({ expires_at: next })
+      .eq("id", currentRoom.id);
+    if (error) {
+      console.error(error);
+      alert("延長に失敗しました");
+    }
+  };
+
+  const leaveTrace = async (body: string) => {
+    if (!currentRoom || !currentBook) return;
+    const { error } = await supabase.from("book_traces").insert({
+      book_id: currentBook.id,
+      room_id: currentRoom.id,
+      room_title: currentRoom.title,
+      body,
+      created_by_name: profile?.name ?? null,
+    });
+    if (error) {
+      console.error(error);
+      alert("置き手紙の保存に失敗しました");
     }
   };
 
@@ -407,8 +561,8 @@ useEffect(() => {
           onOpenContact={() => setContactOpen(true)}
           onOpenMobileMenu={() => setProfileMenuOpen(true)}
           recentHeats={recentHeats}
-          unreadCount={myLogUnreadCount}
-          hasReminder={hasReservationReminder}
+          unreadCount={0}
+          hasReminder={false}
         />
       )}
 
@@ -425,21 +579,33 @@ useEffect(() => {
         />
       )}
 
-      {page.type === "room" && currentBook && currentRoom && currentRoomExpired && (
-        <ExpiredRoomPage
-          onBack={() => setPage({ type: "book", bookId: currentBook.id })}
-        />
-      )}
+      {page.type === "room" &&
+        currentBook &&
+        currentRoom &&
+        currentRoomExpired && (
+          <ExpiredRoomPage
+            onBack={() => setPage({ type: "book", bookId: currentBook.id })}
+          />
+        )}
 
-      {page.type === "room" && currentBook && currentRoom && !currentRoomExpired && (
-        <RoomPage
-          book={currentBook}
-          room={currentRoom}
-          onBack={() => setPage({ type: "book", bookId: currentBook.id })}
-          onSendMessage={sendMessage}
-          onDeleteRoom={() => deleteRoom(currentRoom.id)}
-        />
-      )}
+      {page.type === "room" &&
+        currentBook &&
+        currentRoom &&
+        !currentRoomExpired && (
+          <RoomPage
+            book={currentBook}
+            room={currentRoom}
+            currentProfile={profile}
+            myProfileId={myProfileId}
+            onBack={() => setPage({ type: "book", bookId: currentBook.id })}
+            onSendMessage={sendMessage}
+            onDeleteRoom={() => deleteRoom(currentRoom.id)}
+            onReserve={reserve}
+            onCancelReservation={cancelReservation}
+            onExtend={extendRoom}
+            onLeaveTrace={leaveTrace}
+          />
+        )}
 
       <CreateRoomDialog
         open={createOpen}
@@ -453,6 +619,7 @@ useEffect(() => {
         onCreate={createBook}
       />
 
+      {/* 下記3つは後日、別ファイルに切り出して中身を戻す予定のプレースホルダー */}
       <Dialog open={myLogOpen} onOpenChange={setMyLogOpen}>
         <DialogContent className="rounded-3xl sm:max-w-lg">
           <DialogHeader>
