@@ -329,7 +329,7 @@ export default function Page() {
       if (document.visibilityState === "visible") {
         loadAll({ silent: true });
       }
-    }, 15_000);
+    }, }, 5_000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
