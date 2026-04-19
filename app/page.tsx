@@ -11,34 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type {
+  Message,
+  Reservation,
+  Room,
+  BookTrace,
+  Book,
+  UserProfile,
+  ProfileRecord,
+} from "@/lib/types";
 
-type Message = {
-  id: number;
-  room_id: number;
-  user_name: string;
-  text: string;
-  created_at: string;
-};
-
-type Room = {
-  id: number;
-  book_id: string;
-  title: string;
-  entry_type: "open" | "approval";
-  spoiler: "none" | "progress" | "read";
-  active_users: number;
-  updated_at: string;
-  expires_at: string | null;
-  messages: Message[];
-};
-
-type Book = {
-  id: string;
-  title: string;
-  author: string | null;
-  description: string | null;
-  rooms: Room[];
-};
 
 const spoilerMap = {
   none: { label: "未読歓迎", variant: "secondary" as const },
@@ -47,9 +29,30 @@ const spoilerMap = {
 };
 
 const entryMap = {
-  open: { label: "飛び込みOK", icon: DoorOpen },
-  approval: { label: "承認制", icon: Lock },
-};
+  welcome: { label: "ふらっと歓迎", icon: DoorOpen },
+  deep: { label: "じっくり対話", icon: MessageSquare },
+  small: { label: "少人数向け", icon: Lock },
+  open: { label: "ふらっと歓迎", icon: DoorOpen },
+  approval: { label: "少人数向け", icon: Lock },
+} as const;
+
+const colorOptions = [
+  { value: "slate", label: "グレー", bubble: "bg-slate-100 text-slate-800", chip: "bg-slate-500", name: "text-slate-700" },
+  { value: "red", label: "赤", bubble: "bg-red-100 text-red-900", chip: "bg-red-500", name: "text-red-700" },
+  { value: "blue", label: "青", bubble: "bg-blue-100 text-blue-900", chip: "bg-blue-500", name: "text-blue-700" },
+  { value: "green", label: "緑", bubble: "bg-green-100 text-green-900", chip: "bg-green-500", name: "text-green-700" },
+  { value: "purple", label: "紫", bubble: "bg-purple-100 text-purple-900", chip: "bg-purple-500", name: "text-purple-700" },
+  { value: "amber", label: "黄", bubble: "bg-amber-100 text-amber-900", chip: "bg-amber-500", name: "text-amber-700" },
+] as const;
+
+function getColorStyle(color?: string | null) {
+  return colorOptions.find((c) => c.value === color) ?? colorOptions[0];
+}
+
+function isRoomExpired(room: Room) {
+  if (!room.expires_at) return false;
+  return new Date(room.expires_at).getTime() <= Date.now();
+}
 
 function formatRelativeTime(value: string) {
   const date = new Date(value);
@@ -68,12 +71,21 @@ function formatExpiresAt(value: string | null) {
   const date = new Date(value);
   const diffMs = date.getTime() - Date.now();
   const diffMin = Math.floor(diffMs / 1000 / 60);
-  if (diffMin <= 0) return "期限切れ";
+  if (diffMin <= 0) return "終了";
   if (diffMin < 60) return `残り${diffMin}分`;
   const diffHour = Math.floor(diffMin / 60);
   if (diffHour < 24) return `残り${diffHour}時間`;
   const diffDay = Math.floor(diffHour / 24);
   return `残り${diffDay}日`;
+}
+
+function slugifyTitle(title: string) {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
 }
 
 function RoomBadge({ room }: { room: Room }) {
@@ -91,127 +103,192 @@ function RoomBadge({ room }: { room: Room }) {
   );
 }
 
-function TopPage({
-  books,
-  onOpenBook,
+function NameSetupDialog({
+  open,
+  initialName,
+  initialColor,
+  onSave,
 }: {
-  books: Book[];
-  onOpenBook: (bookId: string) => void;
+  open: boolean;
+  initialName: string;
+  initialColor: string;
+  onSave: (profile: UserProfile) => void;
 }) {
-  const [query, setQuery] = useState("");
+  const [name, setName] = useState(initialName);
+  const [color, setColor] = useState(initialColor);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return books;
-    return books.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        (b.author ?? "").toLowerCase().includes(q)
-    );
-  }, [books, query]);
-
-  const activeRooms = books
-    .flatMap((b) => b.rooms.map((r) => ({ ...r, bookTitle: b.title })))
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, 4);
+  useEffect(() => {
+    setName(initialName);
+    setColor(initialColor);
+  }, [initialName, initialColor, open]);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <Card className="rounded-3xl border-0 shadow-sm">
-            <CardHeader className="space-y-4 p-8">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-sm text-neutral-600">
-                <BookOpen className="h-4 w-4" />
-                本に属する談話室
-              </div>
-              <div className="space-y-3">
-                <CardTitle className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                  読んで終わりにしない。
-                </CardTitle>
-                <CardDescription className="max-w-2xl text-base leading-7 text-neutral-600">
-                  本を読んだ後に少し話したくなった時のための場所です。
-                  本ごとのページに入り、その本について短く話せる部屋に参加できます。
-                </CardDescription>
-              </div>
-            </CardHeader>
-          </Card>
+    <Dialog open={open}>
+      <DialogContent className="rounded-3xl sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>名前を設定</DialogTitle>
+        </DialogHeader>
 
-          <Card className="rounded-3xl border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">今、人がいる部屋</CardTitle>
-              <CardDescription>短命の部屋を基本にします。</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {activeRooms.map((room) => (
-                <div key={room.id} className="rounded-2xl border border-neutral-200 p-4">
-                  <div className="mb-2 text-sm text-neutral-500">{room.bookTitle}</div>
-                  <div className="mb-2 font-medium leading-6">{room.title}</div>
-                  <RoomBadge room={room} />
-                  <div className="mt-3 flex items-center justify-between text-sm text-neutral-500">
-                    <span className="inline-flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {room.active_users}人
-                    </span>
-                    <span>{formatRelativeTime(room.updated_at)}</span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">本を探す</h2>
-              <p className="text-sm text-neutral-500">本に入る。人を探しに行かない。</p>
-            </div>
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="本のタイトル・著者名で検索"
-                className="rounded-2xl pl-9"
-              />
-            </div>
+        <div className="space-y-5 py-2">
+          <div className="space-y-2">
+            <Label>表示名</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="例: tomoki / 読書猫 / N"
+              className="rounded-2xl"
+            />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((book) => (
-              <Card key={book.id} className="rounded-3xl border border-neutral-200 shadow-none">
-                <CardHeader className="space-y-2">
-                  <div className="text-sm text-neutral-500">{book.author}</div>
-                  <CardTitle className="text-xl leading-7">{book.title}</CardTitle>
-                  <CardDescription className="leading-6">{book.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between">
-                  <div className="text-sm text-neutral-500">稼働中の部屋 {book.rooms.length}件</div>
-                  <Button className="rounded-2xl" onClick={() => onOpenBook(book.id)}>
-                    この本のページへ
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-2">
+            <Label>発言の色</Label>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {colorOptions.map((option) => {
+                const selected = color === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setColor(option.value)}
+                    className={`rounded-2xl border p-3 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className={`h-3 w-3 rounded-full ${option.chip}`} />
+                      <span className="text-sm font-medium">{option.label}</span>
+                    </div>
+                    <div className={`rounded-xl px-3 py-2 text-sm ${option.bubble}`}>サンプル投稿</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+
+        <DialogFooter>
+          <Button
+            className="rounded-2xl"
+            onClick={() => {
+              if (!name.trim()) {
+                alert("表示名を入力してください");
+                return;
+              }
+              onSave({
+                name: name.trim(),
+                color,
+              });
+            }}
+          >
+            保存する
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
+
+function AddBookDialog({
+  open,
+  onOpenChange,
+  onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreate: (payload: {
+    title: string;
+    author: string;
+    description: string;
+  }) => Promise<void>;
+}) {
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!title.trim()) {
+      alert("本のタイトルを入力してください");
+      return;
+    }
+    if (submitting) return;
+
+    setSubmitting(true);
+    await onCreate({
+      title: title.trim(),
+      author: author.trim(),
+      description: description.trim(),
+    });
+    setTitle("");
+    setAuthor("");
+    setDescription("");
+    setSubmitting(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-3xl sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>本を追加</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>タイトル</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="例: 斜陽"
+              className="rounded-2xl"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>著者</Label>
+            <Input
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="例: 太宰治"
+              className="rounded-2xl"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>説明</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="例: 戦後文学の代表作のひとつ。人間関係や没落の感覚を語りやすい。"
+              className="min-h-[120px] rounded-2xl"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" className="rounded-2xl" onClick={() => onOpenChange(false)}>
+            閉じる
+          </Button>
+          <Button className="rounded-2xl" onClick={submit} disabled={submitting}>
+            追加する
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function BookPage({
   book,
   onBack,
-  onOpenRoom,
+  onEnterRoom,
   onCreateRoom,
 }: {
   book: Book;
   onBack: () => void;
-  onOpenRoom: (roomId: number) => void;
+  onEnterRoom: (roomId: number) => void;
   onCreateRoom: () => void;
 }) {
+  const visibleRooms = book.rooms.filter((room) => !isRoomExpired(room));
+
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
@@ -235,7 +312,7 @@ function BookPage({
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle className="text-xl">この本の部屋</CardTitle>
-                <CardDescription>部屋は短命で構いません。</CardDescription>
+                <CardDescription>期限切れの部屋は表示されません。</CardDescription>
               </div>
               <Button className="gap-2 rounded-2xl" onClick={onCreateRoom}>
                 <Plus className="h-4 w-4" />
@@ -243,18 +320,18 @@ function BookPage({
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {book.rooms.length === 0 ? (
+              {visibleRooms.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-neutral-300 p-8 text-center">
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
                     <MessageSquare className="h-5 w-5 text-neutral-500" />
                   </div>
-                  <div className="mb-2 font-medium">まだ部屋がありません</div>
+                  <div className="mb-2 font-medium">いま表示できる部屋はありません</div>
                   <Button className="rounded-2xl" onClick={onCreateRoom}>
                     最初の部屋を作る
                   </Button>
                 </div>
               ) : (
-                book.rooms.map((room) => (
+                visibleRooms.map((room) => (
                   <div key={room.id} className="rounded-3xl border border-neutral-200 p-5">
                     <div className="mb-2 flex items-start justify-between gap-3">
                       <div>
@@ -263,7 +340,7 @@ function BookPage({
                           <RoomBadge room={room} />
                         </div>
                       </div>
-                      <Button variant="outline" className="rounded-2xl" onClick={() => onOpenRoom(room.id)}>
+                      <Button variant="outline" className="rounded-2xl" onClick={() => onEnterRoom(room.id)}>
                         入る
                       </Button>
                     </div>
@@ -286,16 +363,44 @@ function BookPage({
   );
 }
 
+function ExpiredRoomPage({
+  onBack,
+}: {
+  onBack: () => void;
+}) {
+  return (
+    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <Button variant="ghost" className="mb-4 rounded-2xl" onClick={onBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          戻る
+        </Button>
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle>この部屋は終了しました</CardTitle>
+            <CardDescription>
+              期限切れのため、この部屋は現在表示対象外です。必要なら新しい部屋を作成してください。
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 function RoomPage({
   book,
   room,
   onBack,
   onSendMessage,
+  onDeleteRoom,
 }: {
   book: Book;
   room: Room;
   onBack: () => void;
   onSendMessage: (text: string) => Promise<void>;
+  onDeleteRoom: () => Promise<void>;
 }) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -311,10 +416,24 @@ function RoomPage({
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
-        <Button variant="ghost" className="mb-4 rounded-2xl" onClick={onBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {book.title} に戻る
-        </Button>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Button variant="ghost" className="rounded-2xl" onClick={onBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {book.title} に戻る
+          </Button>
+
+          <Button
+            variant="destructive"
+            className="rounded-2xl"
+            onClick={async () => {
+              const ok = window.confirm("この部屋を削除しますか？");
+              if (!ok) return;
+              await onDeleteRoom();
+            }}
+          >
+            部屋を削除
+          </Button>
+        </div>
 
         <Card className="rounded-3xl border-0 shadow-sm">
           <CardHeader className="border-b border-neutral-100 pb-5">
@@ -335,27 +454,30 @@ function RoomPage({
 
           <CardContent className="p-0">
             <div className="h-[460px] space-y-4 overflow-y-auto p-6">
-              {room.messages.map((m) => (
-                <div key={m.id} className="flex gap-3">
-                  <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium uppercase text-neutral-700">
-                    {m.user_name.slice(0, 1)}
-                  </div>
-                  <div className="max-w-[85%]">
-                    <div className="mb-1 flex items-center gap-2 text-sm">
-                      <span className="font-medium">{m.user_name}</span>
-                      <span className="text-neutral-400">
-                        {new Date(m.created_at).toLocaleTimeString("ja-JP", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+              {room.messages.map((m) => {
+                const colorStyle = getColorStyle(m.user_color);
+                return (
+                  <div key={m.id} className="flex gap-3">
+                    <div className={`mt-1 flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium uppercase text-white ${colorStyle.chip}`}>
+                      {m.user_name.slice(0, 1)}
                     </div>
-                    <div className="rounded-2xl bg-neutral-100 px-4 py-3 leading-7 text-neutral-800">
-                      {m.text}
+                    <div className="max-w-[85%]">
+                      <div className="mb-1 flex items-center gap-2 text-sm">
+                        <span className={`font-medium ${colorStyle.name}`}>{m.user_name}</span>
+                        <span className="text-neutral-400">
+                          {new Date(m.created_at).toLocaleTimeString("ja-JP", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <div className={`rounded-2xl px-4 py-3 leading-7 ${colorStyle.bubble}`}>
+                        {m.text}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="border-t border-neutral-100 p-4">
@@ -392,12 +514,14 @@ function CreateRoomDialog({
     title: string;
     entryType: "open" | "approval";
     spoiler: "none" | "progress" | "read";
+    durationHours: number;
     firstMessage: string;
   }) => Promise<void>;
 }) {
   const [title, setTitle] = useState("");
   const [entryType, setEntryType] = useState<"open" | "approval">("open");
   const [spoiler, setSpoiler] = useState<"none" | "progress" | "read">("none");
+  const [durationHours, setDurationHours] = useState("2");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -408,11 +532,13 @@ function CreateRoomDialog({
       title: title.trim(),
       entryType,
       spoiler,
+      durationHours: Number(durationHours),
       firstMessage: note.trim(),
     });
     setTitle("");
     setEntryType("open");
     setSpoiler("none");
+    setDurationHours("2");
     setNote("");
     setSubmitting(false);
   };
@@ -465,6 +591,22 @@ function CreateRoomDialog({
           </div>
 
           <div className="space-y-2">
+            <Label>部屋の期限</Label>
+            <Select value={durationHours} onValueChange={setDurationHours}>
+              <SelectTrigger className="rounded-2xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1時間</SelectItem>
+                <SelectItem value="2">2時間</SelectItem>
+                <SelectItem value="6">6時間</SelectItem>
+                <SelectItem value="24">24時間</SelectItem>
+                <SelectItem value="72">3日</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>最初のひとこと</Label>
             <Textarea
               value={note}
@@ -496,7 +638,58 @@ export default function Page() {
     { type: "room"; bookId: string; roomId: number }
   >({ type: "top" });
   const [createOpen, setCreateOpen] = useState(false);
+  const [addBookOpen, setAddBookOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [pendingEntry, setPendingEntry] = useState<{ bookId: string; roomId: number } | null>(null);
+
+  const [profiles] = useState<ProfileRecord[]>([]);
+  const [myLogOpen, setMyLogOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  const saved = window.localStorage.getItem("book-room-profile");
+  if (!saved) return;
+
+  try {
+    setProfile(JSON.parse(saved));
+  } catch {
+    setProfile(null);
+  }
+}, []);
+
+  const saveProfile = (nextProfile: UserProfile) => {
+    setProfile(nextProfile);
+    localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
+
+    if (pendingEntry) {
+      setPage({ type: "room", bookId: pendingEntry.bookId, roomId: pendingEntry.roomId });
+      setPendingEntry(null);
+    }
+
+    setProfileDialogOpen(false);
+  };
+
+  const clearLocalProfile = () => {
+    localStorage.removeItem("book-room-profile");
+    setProfile(null);
+  };
+
+  const recentHeats: {
+    bookId: string;
+    bookTitle: string;
+    body: string;
+    roomTitle: string | null;
+    createdAt: string;
+  }[] = [];
+
+  const myLogUnreadCount = 0;
+  const hasReservationReminder = false;
 
   const loadAll = async () => {
     setLoading(true);
@@ -571,15 +764,58 @@ export default function Page() {
       ? currentBook.rooms.find((r) => r.id === page.roomId) ?? null
       : null;
 
+  const currentRoomExpired = currentRoom ? isRoomExpired(currentRoom) : false;
+
+  const handleEnterRoom = (bookId: string, roomId: number) => {
+    if (!profile) {
+      setPendingEntry({ bookId, roomId });
+      setProfileDialogOpen(true);
+      return;
+    }
+    setPage({ type: "room", bookId, roomId });
+  };
+
+  const createBook = async (payload: {
+    title: string;
+    author: string;
+    description: string;
+  }) => {
+    const baseId = slugifyTitle(payload.title);
+    const nextId = baseId || `book-${Date.now()}`;
+
+    const exists = books.some((b) => b.id === nextId);
+    if (exists) {
+      alert("同じIDになりそうな本がすでにあります。タイトルを少し変えて追加してください。");
+      return;
+    }
+
+    const { error } = await supabase.from("books").insert({
+      id: nextId,
+      title: payload.title,
+      author: payload.author || null,
+      description: payload.description || null,
+    });
+
+    if (error) {
+      console.error(error);
+      alert("本の追加に失敗しました");
+      return;
+    }
+
+    setAddBookOpen(false);
+    await loadAll();
+  };
+
   const createRoom = async (payload: {
     title: string;
     entryType: "open" | "approval";
     spoiler: "none" | "progress" | "read";
+    durationHours: number;
     firstMessage: string;
   }) => {
     if (!currentBook) return;
 
-    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + payload.durationHours * 60 * 60 * 1000).toISOString();
 
     const { data: insertedRoom, error: roomError } = await supabase
       .from("rooms")
@@ -596,18 +832,24 @@ export default function Page() {
 
     if (roomError) {
       console.error(roomError);
+      alert("部屋の作成に失敗しました");
       return;
     }
 
     if (payload.firstMessage) {
+      const sender = profile?.name ?? "you";
+      const senderColor = profile?.color ?? "slate";
+
       const { error: messageError } = await supabase.from("messages").insert({
         room_id: insertedRoom.id,
-        user_name: "you",
+        user_name: sender,
+        user_color: senderColor,
         text: payload.firstMessage,
       });
 
       if (messageError) {
         console.error(messageError);
+        alert("最初の投稿の保存に失敗しました");
         return;
       }
     }
@@ -620,14 +862,19 @@ export default function Page() {
   const sendMessage = async (text: string) => {
     if (!currentRoom) return;
 
+    const sender = profile?.name ?? "you";
+    const senderColor = profile?.color ?? "slate";
+
     const { error } = await supabase.from("messages").insert({
       room_id: currentRoom.id,
-      user_name: "you",
+      user_name: sender,
+      user_color: senderColor,
       text,
     });
 
     if (error) {
       console.error(error);
+      alert("投稿に失敗しました");
       return;
     }
 
@@ -639,39 +886,29 @@ export default function Page() {
     await loadAll();
   };
 
+  const deleteRoom = async (roomId: number) => {
+    const { error } = await supabase
+      .from("rooms")
+      .delete()
+      .eq("id", roomId);
+
+    if (error) {
+      console.error(error);
+      alert(`部屋の削除に失敗しました: ${error.message}`);
+      return;
+    }
+
+    await loadAll();
+
+    if (currentBook) {
+      setPage({ type: "book", bookId: currentBook.id });
+    } else {
+      setPage({ type: "top" });
+    }
+  };
+
   if (loading) {
     return <div className="p-8">読み込み中...</div>;
   }
-
-  return (
-    <>
-      {page.type === "top" && (
-        <TopPage books={books} onOpenBook={(bookId) => setPage({ type: "book", bookId })} />
-      )}
-
-      {page.type === "book" && currentBook && (
-        <BookPage
-          book={currentBook}
-          onBack={() => setPage({ type: "top" })}
-          onOpenRoom={(roomId) => setPage({ type: "room", bookId: currentBook.id, roomId })}
-          onCreateRoom={() => setCreateOpen(true)}
-        />
-      )}
-
-      {page.type === "room" && currentBook && currentRoom && (
-        <RoomPage
-          book={currentBook}
-          room={currentRoom}
-          onBack={() => setPage({ type: "book", bookId: currentBook.id })}
-          onSendMessage={sendMessage}
-        />
-      )}
-
-      <CreateRoomDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreate={createRoom}
-      />
-    </>
-  );
+  return <div className="p-8">Page test</div>;
 }
