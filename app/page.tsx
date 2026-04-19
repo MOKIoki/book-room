@@ -22,6 +22,7 @@ import type {
 } from "@/lib/types";
  import BookPage from "@/components/pages/BookPage";
  import TopPage from "@/components/pages/TopPage";
+ import RoomPage from "@/components/pages/RoomPage";
 
 const spoilerMap = {
   none: { label: "未読歓迎", variant: "secondary" as const },
@@ -297,120 +298,6 @@ function ExpiredRoomPage({
               期限切れのため、この部屋は現在表示対象外です。必要なら新しい部屋を作成してください。
             </CardDescription>
           </CardHeader>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function RoomPage({
-  book,
-  room,
-  onBack,
-  onSendMessage,
-  onDeleteRoom,
-}: {
-  book: Book;
-  room: Room;
-  onBack: () => void;
-  onSendMessage: (text: string) => Promise<void>;
-  onDeleteRoom: () => Promise<void>;
-}) {
-  const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
-
-  const submit = async () => {
-    if (!draft.trim() || sending) return;
-    setSending(true);
-    await onSendMessage(draft.trim());
-    setDraft("");
-    setSending(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <Button variant="ghost" className="rounded-2xl" onClick={onBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {book.title} に戻る
-          </Button>
-
-          <Button
-            variant="destructive"
-            className="rounded-2xl"
-            onClick={async () => {
-              const ok = window.confirm("この部屋を削除しますか？");
-              if (!ok) return;
-              await onDeleteRoom();
-            }}
-          >
-            部屋を削除
-          </Button>
-        </div>
-
-        <Card className="rounded-3xl border-0 shadow-sm">
-          <CardHeader className="border-b border-neutral-100 pb-5">
-            <div className="text-sm text-neutral-500">{book.title}</div>
-            <CardTitle className="text-2xl leading-8">{room.title}</CardTitle>
-            <div className="pt-2">
-              <RoomBadge room={room} />
-            </div>
-            <div className="flex flex-wrap gap-4 pt-2 text-sm text-neutral-500">
-              <span className="inline-flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                {room.active_users}人
-              </span>
-              <span>{formatRelativeTime(room.updated_at)}</span>
-              <span>{formatExpiresAt(room.expires_at)}</span>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-0">
-            <div className="h-[460px] space-y-4 overflow-y-auto p-6">
-              {room.messages.map((m) => {
-                const colorStyle = getColorStyle(m.user_color);
-                return (
-                  <div key={m.id} className="flex gap-3">
-                    <div className={`mt-1 flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium uppercase text-white ${colorStyle.chip}`}>
-                      {m.user_name.slice(0, 1)}
-                    </div>
-                    <div className="max-w-[85%]">
-                      <div className="mb-1 flex items-center gap-2 text-sm">
-                        <span className={`font-medium ${colorStyle.name}`}>{m.user_name}</span>
-                        <span className="text-neutral-400">
-                          {new Date(m.created_at).toLocaleTimeString("ja-JP", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                      <div className={`rounded-2xl px-4 py-3 leading-7 ${colorStyle.bubble}`}>
-                        {m.text}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="border-t border-neutral-100 p-4">
-              <div className="mb-2 text-xs text-neutral-500">
-                会話補助の例: 「まず一言感想」「好きだった箇所」「引っかかった点」
-              </div>
-              <div className="flex gap-3">
-                <Textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="本の話題に沿って投稿してください。"
-                  className="min-h-[88px] rounded-2xl"
-                />
-                <Button onClick={submit} className="h-auto rounded-2xl px-6" disabled={sending}>
-                  送信
-                </Button>
-              </div>
-            </div>
-          </CardContent>
         </Card>
       </div>
     </div>
