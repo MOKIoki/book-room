@@ -21,6 +21,7 @@ type NameSetupDialogProps = {
   initialName: string;
   initialColor: string;
   onSave: (profile: UserProfile) => void;
+  onClose?: () => void;
 };
 
 export default function NameSetupDialog({
@@ -28,6 +29,7 @@ export default function NameSetupDialog({
   initialName,
   initialColor,
   onSave,
+  onClose,
 }: NameSetupDialogProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
@@ -38,7 +40,12 @@ export default function NameSetupDialog({
   }, [initialName, initialColor, open]);
 
   return (
-    <Dialog open={open}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose?.();
+      }}
+    >
       <DialogContent className="rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>名前を設定</DialogTitle>
@@ -80,6 +87,11 @@ export default function NameSetupDialog({
         </div>
 
         <DialogFooter>
+          {onClose && (
+            <Button variant="outline" className="rounded-2xl" onClick={onClose}>
+              閉じる
+            </Button>
+          )}
           <Button
             className="rounded-2xl"
             onClick={() => {
