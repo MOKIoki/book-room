@@ -2205,10 +2205,10 @@ function BookPage({
 }) {
   useNow(); // 時刻表示を1分ごとに更新
 
-  const visibleRooms = [...getActiveRooms(book.rooms)].sort(
-    (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-  );
+const visibleRooms = [...book.rooms].sort(
+  (a, b) =>
+    new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+);
 
   const roomLimitReached = visibleRooms.length >= MAX_ACTIVE_ROOMS_PER_BOOK;
 
