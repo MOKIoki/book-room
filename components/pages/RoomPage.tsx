@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Users,
   MessageSquare,
   Lock,
   DoorOpen,
+  Clock3,
+  Eye,
 } from "lucide-react";
-import type { Book, Room } from "@/lib/types";
+import type { Book, Room, UserProfile } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 import {
   Card,
   CardContent,
@@ -18,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+
+const RESERVATION_CAPACITY = 5;
 
 const spoilerMap = {
   none: { label: "未読歓迎", variant: "secondary" as const },
@@ -34,12 +39,12 @@ const entryMap = {
 } as const;
 
 const colorOptions = [
-  { value: "slate", label: "グレー", bubble: "bg-slate-100 text-slate-800", chip: "bg-slate-500", name: "text-slate-700" },
-  { value: "red", label: "赤", bubble: "bg-red-100 text-red-900", chip: "bg-red-500", name: "text-red-700" },
-  { value: "blue", label: "青", bubble: "bg-blue-100 text-blue-900", chip: "bg-blue-500", name: "text-blue-700" },
-  { value: "green", label: "緑", bubble: "bg-green-100 text-green-900", chip: "bg-green-500", name: "text-green-700" },
-  { value: "purple", label: "紫", bubble: "bg-purple-100 text-purple-900", chip: "bg-purple-500", name: "text-purple-700" },
-  { value: "amber", label: "黄", bubble: "bg-amber-100 text-amber-900", chip: "bg-amber-500", name: "text-amber-700" },
+  { value: "slate", bubble: "bg-slate-100 text-slate-800", chip: "bg-slate-500", name: "text-slate-700" },
+  { value: "red", bubble: "bg-red-100 text-red-900", chip: "bg-red-500", name: "text-red-700" },
+  { value: "blue", bubble: "bg-blue-100 text-blue-900", chip: "bg-blue-500", name: "text-blue-700" },
+  { value: "green", bubble: "bg-green-100 text-green-900", chip: "bg-green-500", name: "text-green-700" },
+  { value: "purple", bubble: "bg-purple-100 text-purple-900", chip: "bg-purple-500", name: "text-purple-700" },
+  { value: "amber", bubble: "bg-amber-100 text-amber-900", chip: "bg-amber-500", name: "text-amber-700" },
 ] as const;
 
 function getColorStyle(color?: string | null) {
@@ -71,6 +76,55 @@ function formatExpiresAt(value: string | null) {
   return `残り${diffDay}日`;
 }
 
+function formatUntilStart(value: string) {
+  const ms = new Date(value).getTime() - Date.now();
+  if (ms <= 0) return "開始しました";
+  const min = Math.floor(ms / 1000 / 60);
+  if (min < 60) return `あと${min}分で開始`;
+  const hour = Math.floor(min / 60);
+  if (hour < 24) return `あと${hour}時間${min % 60}分で開始`;
+  const day = Math.floor(hour / 24);
+  return `あと${day}日で開始`;
+}
+
+function renderMessageContent(text: string): React.ReactNode {
+  const urlRegex = /https?:\/\/[^\s]+/g;
+  const pieces: (string | React.ReactElement)[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let urlKey = 0;
+  while ((match = urlRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) pieces.push(text.slice(lastIndex, match.index));
+    pieces.push(
+      <a
+        key={`u${urlKey++}`}
+        href={match[0]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline break-all"
+      >
+        {match[0]}
+      </a>,
+    );
+    lastIndex = urlRegex.lastIndex;
+  }
+  if (lastIndex < text.length) pieces.push(text.slice(lastIndex));
+  if (pieces.length === 0) pieces.push(text);
+  const out: React.ReactNode[] = [];
+  pieces.forEach((piece, i) => {
+    if (typeof piece === "string") {
+      const lines = piece.split("\n");
+      lines.forEach((line, j) => {
+        if (j > 0) out.push(<br key={`br-${i}-${j}`} />);
+        if (line.length > 0) out.push(line);
+      });
+    } else {
+      out.push(piece);
+    }
+  });
+  return out;
+}
+
 function RoomBadge({ room }: { room: Room }) {
   const EntryIcon = entryMap[room.entry_type].icon;
   return (
@@ -89,27 +143,102 @@ function RoomBadge({ room }: { room: Room }) {
 type RoomPageProps = {
   book: Book;
   room: Room;
+  currentProfile: UserProfile | null;
+  myProfileId: number | null;
   onBack: () => void;
   onSendMessage: (text: string) => Promise<void>;
   onDeleteRoom: () => Promise<void>;
+  onReserve: () => Promise<void>;
+  onCancelReservation: () => Promise<void>;
+  onExtend: (hours: number) => Promise<void>;
+  onLeaveTrace: (body: string) => Promise<void>;
 };
 
 export default function RoomPage({
   book,
   room,
+  currentProfile,
+  myProfileId,
   onBack,
   onSendMessage,
   onDeleteRoom,
+  onReserve,
+  onCancelReservation,
+  onExtend,
+  onLeaveTrace,
 }: RoomPageProps) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [presenceCount, setPresenceCount] = useState(1);
+  const [traceDraft, setTraceDraft] = useState("");
+  const [tracing, setTracing] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scheduledMs = room.scheduled_start_at
+    ? new Date(room.scheduled_start_at).getTime()
+    : null;
+  const isBeforeStart = scheduledMs !== null && scheduledMs > Date.now();
+
+  const myReservation = useMemo(
+    () =>
+      myProfileId
+        ? room.reservations.find((r) => r.profile_id === myProfileId) ?? null
+        : null,
+    [room.reservations, myProfileId],
+  );
+  const reservationCount = room.reservations.length;
+  const reservationFull = reservationCount >= RESERVATION_CAPACITY;
+
+  const expiresMs = room.expires_at ? new Date(room.expires_at).getTime() : null;
+  const inFinalHour =
+    expiresMs !== null &&
+    expiresMs - Date.now() <= 60 * 60 * 1000 &&
+    expiresMs > Date.now();
+
+  // Presence
+  useEffect(() => {
+    const channel = supabase.channel(`presence-room-${room.id}`);
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        setPresenceCount(Object.keys(state).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({
+            name: currentProfile?.name ?? "ゲスト",
+            at: new Date().toISOString(),
+          });
+        }
+      });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room.id, currentProfile?.name]);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [room.messages.length]);
 
   const submit = async () => {
     if (!draft.trim() || sending) return;
+    if (isBeforeStart) {
+      alert("予約読書会は開始日時まで投稿できません");
+      return;
+    }
     setSending(true);
     await onSendMessage(draft.trim());
     setDraft("");
     setSending(false);
+  };
+
+  const submitTrace = async () => {
+    if (!traceDraft.trim() || tracing) return;
+    setTracing(true);
+    await onLeaveTrace(traceDraft.trim());
+    setTraceDraft("");
+    setTracing(false);
   };
 
   return (
@@ -137,66 +266,187 @@ export default function RoomPage({
         <Card className="rounded-3xl border-0 shadow-sm">
           <CardHeader className="border-b border-neutral-100 pb-5">
             <div className="text-sm text-neutral-500">{book.title}</div>
-            <CardTitle className="text-2xl leading-8">{room.title}</CardTitle>
+            <CardTitle className="flex flex-wrap items-center gap-2 text-2xl leading-8">
+              {room.title}
+              {isBeforeStart && (
+                <Badge variant="outline" className="border-sky-300 bg-white text-sky-700">
+                  予約読書会
+                </Badge>
+              )}
+            </CardTitle>
             <div className="pt-2">
               <RoomBadge room={room} />
             </div>
             <div className="flex flex-wrap gap-4 pt-2 text-sm text-neutral-500">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-4 w-4" />
-                {room.active_users}人
+                {presenceCount}人が参加中
               </span>
               <span>{formatRelativeTime(room.updated_at)}</span>
               <span>{formatExpiresAt(room.expires_at)}</span>
+              {!isBeforeStart && room.expires_at && (
+                <button
+                  type="button"
+                  className="text-xs text-neutral-500 underline"
+                  onClick={() => onExtend(1)}
+                >
+                  1時間延長
+                </button>
+              )}
             </div>
           </CardHeader>
 
-          <CardContent className="p-0">
-            <div className="h-[460px] space-y-4 overflow-y-auto p-6">
-              {room.messages.map((m) => {
-                const colorStyle = getColorStyle(m.user_color);
-                return (
-                  <div key={m.id} className="flex gap-3">
-                    <div className={`mt-1 flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium uppercase text-white ${colorStyle.chip}`}>
-                      {m.user_name.slice(0, 1)}
-                    </div>
-                    <div className="max-w-[85%]">
-                      <div className="mb-1 flex items-center gap-2 text-sm">
-                        <span className={`font-medium ${colorStyle.name}`}>{m.user_name}</span>
-                        <span className="text-neutral-400">
-                          {new Date(m.created_at).toLocaleTimeString("ja-JP", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                      <div className={`rounded-2xl px-4 py-3 leading-7 ${colorStyle.bubble}`}>
-                        {m.text}
-                      </div>
-                    </div>
+          {isBeforeStart && (
+            <div className="border-b border-sky-100 bg-sky-50/60 px-6 py-4 text-sm text-sky-900">
+              <div className="mb-2 inline-flex items-center gap-2 font-medium">
+                <Clock3 className="h-4 w-4" />
+                {formatUntilStart(room.scheduled_start_at as string)}
+              </div>
+              <div className="text-xs leading-6">
+                開始日時:{" "}
+                {new Date(room.scheduled_start_at as string).toLocaleString("ja-JP", {
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {" / "}予約 {reservationCount}/{RESERVATION_CAPACITY}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {myReservation ? (
+                  <Button
+                    variant="outline"
+                    className="rounded-2xl"
+                    onClick={onCancelReservation}
+                  >
+                    予約済み（キャンセル）
+                  </Button>
+                ) : reservationFull ? (
+                  <Button variant="outline" className="rounded-2xl" disabled>
+                    満員です
+                  </Button>
+                ) : (
+                  <Button className="rounded-2xl" onClick={onReserve}>
+                    予約する
+                  </Button>
+                )}
+                {room.reservations.length > 0 && (
+                  <div className="text-xs text-sky-800/80">
+                    予約者:{" "}
+                    {room.reservations
+                      .map((r) => r.profile_name ?? "匿名")
+                      .join(" / ")}
                   </div>
-                );
-              })}
+                )}
+              </div>
+            </div>
+          )}
+
+          <CardContent className="p-0">
+            <div className="h-[60vh] overflow-y-auto sm:h-[460px]">
+              <div className="flex min-h-full flex-col justify-end space-y-4 p-6">
+                {room.messages.map((m) => {
+                  const colorStyle = getColorStyle(m.user_color);
+                  const isMine =
+                    !!currentProfile?.name && m.user_name === currentProfile.name;
+                  return (
+                    <div
+                      key={m.id}
+                      className={`flex gap-3 ${isMine ? "flex-row-reverse" : ""}`}
+                    >
+                      <div
+                        className={`mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase text-white ${colorStyle.chip}`}
+                      >
+                        {m.user_name.slice(0, 1)}
+                      </div>
+                      <div className="max-w-[85%]">
+                        <div
+                          className={`mb-1 flex items-center gap-2 text-sm ${isMine ? "justify-end" : ""}`}
+                        >
+                          <span className={`font-medium ${colorStyle.name}`}>
+                            {m.user_name}
+                          </span>
+                          <span className="text-neutral-400">
+                            {new Date(m.created_at).toLocaleTimeString("ja-JP", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <div
+                          className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-3 leading-7 ${colorStyle.bubble}`}
+                        >
+                          {renderMessageContent(m.text)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
 
             <div className="border-t border-neutral-100 p-4">
-              <div className="mb-2 text-xs text-neutral-500">
-                会話補助の例: 「まず一言感想」「好きだった箇所」「引っかかった点」
-              </div>
-              <div className="flex gap-3">
-                <Textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="本の話題に沿って投稿してください。"
-                  className="min-h-[88px] rounded-2xl"
-                />
-                <Button onClick={submit} className="h-auto rounded-2xl px-6" disabled={sending}>
-                  送信
-                </Button>
-              </div>
+              {isBeforeStart ? (
+                <div className="rounded-2xl bg-neutral-100 px-4 py-3 text-sm text-neutral-600">
+                  予約読書会は開始日時まで投稿できません。
+                </div>
+              ) : (
+                <>
+                  <div className="mb-2 text-xs text-neutral-500">
+                    会話補助の例: 「まず一言感想」「好きだった箇所」「引っかかった点」
+                  </div>
+                  <div className="flex gap-3">
+                    <Textarea
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      placeholder="本の話題に沿って投稿してください。"
+                      className="min-h-[88px] rounded-2xl"
+                    />
+                    <Button
+                      onClick={submit}
+                      className="h-auto rounded-2xl px-6"
+                      disabled={sending}
+                    >
+                      送信
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
+
+        {!isBeforeStart && inFinalHour && (
+          <Card className="mt-6 rounded-3xl border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Eye className="h-4 w-4" />
+                置き手紙を残す
+              </CardTitle>
+              <div className="text-sm text-neutral-500">
+                部屋の終了後、本のページに短いメッセージとして残ります（30日間・最大4件）。
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={traceDraft}
+                onChange={(e) => setTraceDraft(e.target.value)}
+                placeholder="次に読む人へ、短い一言をどうぞ。"
+                className="min-h-[88px] rounded-2xl"
+              />
+              <div className="mt-2 flex justify-end">
+                <Button
+                  className="rounded-2xl"
+                  onClick={submitTrace}
+                  disabled={tracing || !traceDraft.trim()}
+                >
+                  残す
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
