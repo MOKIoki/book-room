@@ -183,13 +183,23 @@ export default function Page() {
       supabase.from("profiles").select("*"),
     ]);
 
-    if (booksRes.error || roomsRes.error || tracesRes.error || profilesRes.error) {
-      console.error(
-        booksRes.error ?? roomsRes.error ?? tracesRes.error ?? profilesRes.error,
-      );
+    // Books and rooms are core — abort only if either fails.
+    if (booksRes.error || roomsRes.error) {
+      console.error(booksRes.error ?? roomsRes.error);
       if (!options.silent) setLoading(false);
       return;
     }
+
+    // Traces and profiles are optional — fall back to [] so one
+    // missing table (or RLS blocking) doesn't hide the whole app.
+    if (tracesRes.error) console.warn("book_traces:", tracesRes.error);
+    if (profilesRes.error) console.warn("profiles:", profilesRes.error);
+    const tracesData: BookTrace[] = tracesRes.error
+      ? []
+      : ((tracesRes.data ?? []) as BookTrace[]);
+    const profilesData: ProfileRecord[] = profilesRes.error
+      ? []
+      : ((profilesRes.data ?? []) as ProfileRecord[]);
 
     const roomIds = (roomsRes.data ?? []).map((r) => r.id);
     let messagesData: Message[] = [];
@@ -207,13 +217,16 @@ export default function Page() {
           .in("room_id", roomIds)
           .order("created_at", { ascending: true }),
       ]);
-      if (msgRes.error || resRes.error) {
-        console.error(msgRes.error ?? resRes.error);
+      // messages is core for existing rooms.
+      if (msgRes.error) {
+        console.error(msgRes.error);
         if (!options.silent) setLoading(false);
         return;
       }
       messagesData = msgRes.data ?? [];
-      reservationsData = resRes.data ?? [];
+      // reservations is optional — don't block the page if it errors.
+      if (resRes.error) console.warn("reservations:", resRes.error);
+      reservationsData = resRes.error ? [] : (resRes.data ?? []);
     }
 
     const merged: Book[] = (booksRes.data ?? []).map((book) => {
@@ -224,14 +237,12 @@ export default function Page() {
           messages: messagesData.filter((m) => m.room_id === room.id),
           reservations: reservationsData.filter((r) => r.room_id === room.id),
         }));
-      const traces: BookTrace[] = (tracesRes.data ?? []).filter(
-        (t) => t.book_id === book.id,
-      );
+      const traces: BookTrace[] = tracesData.filter((t) => t.book_id === book.id);
       return { ...book, rooms, traces };
     });
 
     setBooks(merged);
-    setProfiles(profilesRes.data ?? []);
+    setProfiles(profilesData);
     if (!options.silent) setLoading(false);
   };
 
@@ -658,6 +669,10 @@ export default function Page() {
         initialName={profile?.name ?? ""}
         initialColor={profile?.color ?? "slate"}
         onSave={saveProfile}
+        onClose={() => {
+          setProfileDialogOpen(false);
+          setPendingEntry(null);
+        }}
       />
     </>
   );
