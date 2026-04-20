@@ -9,6 +9,7 @@ import {
   DoorOpen,
   Clock3,
   Eye,
+  ChevronDown,
 } from "lucide-react";
 import type { Book, Room, UserProfile } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
@@ -172,6 +173,7 @@ export default function RoomPage({
   const [presenceCount, setPresenceCount] = useState(1);
   const [traceDraft, setTraceDraft] = useState("");
   const [tracing, setTracing] = useState(false);
+  const [traceOpen, setTraceOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scheduledMs = room.scheduled_start_at
@@ -417,34 +419,53 @@ export default function RoomPage({
           </CardContent>
         </Card>
 
-       {!isBeforeStart && (
+{!isBeforeStart && (
           <Card className="mt-6 rounded-3xl border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Eye className="h-4 w-4" />
-                置き手紙を残す
-              </CardTitle>
-              <div className="text-sm text-neutral-500">
-                部屋の終了後に公開され、本のページに短いメッセージとして残ります（30日間・最大4件）。いつでも書けます。
+            <button
+              type="button"
+              onClick={() => setTraceOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 px-6 py-5 text-left"
+              aria-expanded={traceOpen}
+            >
+              <div>
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <Eye className="h-4 w-4" />
+                  置き手紙を残す
+                </div>
+                {!traceOpen && (
+                  <div className="mt-1 text-sm text-neutral-500">
+                    チャットを振り返りながら書けます。終了後に本のページへ。
+                  </div>
+                )}
               </div>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={traceDraft}
-                onChange={(e) => setTraceDraft(e.target.value)}
-                placeholder="次に読む人へ、短い一言をどうぞ。"
-                className="min-h-[88px] rounded-2xl"
+              <ChevronDown
+                className={`h-4 w-4 flex-shrink-0 text-neutral-500 transition-transform ${
+                  traceOpen ? "rotate-180" : ""
+                }`}
               />
-              <div className="mt-2 flex justify-end">
-                <Button
-                  className="rounded-2xl"
-                  onClick={submitTrace}
-                  disabled={tracing || !traceDraft.trim()}
-                >
-                  残す
-                </Button>
-              </div>
-            </CardContent>
+            </button>
+            {traceOpen && (
+              <CardContent>
+                <div className="mb-2 text-sm text-neutral-500">
+                  部屋の終了後に公開され、本のページに短いメッセージとして残ります（30日間・最大4件）。
+                </div>
+                <Textarea
+                  value={traceDraft}
+                  onChange={(e) => setTraceDraft(e.target.value)}
+                  placeholder="次に読む人へ、短い一言をどうぞ。"
+                  className="min-h-[88px] rounded-2xl"
+                />
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    className="rounded-2xl"
+                    onClick={submitTrace}
+                    disabled={tracing || !traceDraft.trim()}
+                  >
+                    残す
+                  </Button>
+                </div>
+              </CardContent>
+            )}
           </Card>
         )}
       </div>
