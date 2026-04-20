@@ -127,7 +127,7 @@ export default function Page() {
   }, []);
 
   // Upsert ProfileRecord whenever local profile changes
-  useEffect(() => {
+useEffect(() => {
     if (!profile) {
       setMyProfileId(null);
       return;
@@ -141,6 +141,21 @@ export default function Page() {
         .maybeSingle();
       if (existing) {
         setMyProfileId(existing.id);
+        // お気に入りが変わっていたら更新
+        const nextFavBook = profile.favoriteBookId ?? null;
+        const nextFavNote = profile.favoriteNote ?? null;
+        if (
+          existing.favorite_book_id !== nextFavBook ||
+          existing.favorite_note !== nextFavNote
+        ) {
+          await supabase
+            .from("profiles")
+            .update({
+              favorite_book_id: nextFavBook,
+              favorite_note: nextFavNote,
+            })
+            .eq("id", existing.id);
+        }
         return;
       }
       const { data: inserted, error } = await supabase
@@ -156,7 +171,7 @@ export default function Page() {
         .single();
       if (!error && inserted) setMyProfileId(inserted.id);
     })();
-  }, [profile?.name, profile?.color]);
+  }, [profile?.name, profile?.color, profile?.favoriteBookId, profile?.favoriteNote]);
 
   const saveProfile = (nextProfile: UserProfile) => {
     setProfile(nextProfile);
@@ -746,6 +761,9 @@ export default function Page() {
         open={profileDialogOpen}
         initialName={profile?.name ?? ""}
         initialColor={profile?.color ?? "slate"}
+        initialFavoriteBookId={profile?.favoriteBookId ?? null}
+        initialFavoriteNote={profile?.favoriteNote ?? null}
+        books={books}
         onSave={saveProfile}
         onClose={() => {
           setProfileDialogOpen(false);
