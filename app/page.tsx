@@ -79,7 +79,7 @@ export default function Page() {
   const isPopStateRef = useRef(false);
   const firstLoadRef = useRef(true);
 
-  // Wrap page state setter with pushState
+  // ページ遷移を pushState 込みでセットする
   const setPage = (next: PageState) => {
     setPageState(next);
     if (typeof window !== "undefined" && !isPopStateRef.current) {
@@ -91,7 +91,7 @@ export default function Page() {
     isPopStateRef.current = false;
   };
 
-  // Initial: load profile, restore page from URL, attach popstate
+  // 初回: localStorage 復元 / URL からページ復元 / popstate 監視
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -126,96 +126,92 @@ export default function Page() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  // Upsert ProfileRecord whenever local profile changes
-// プロフィールが変わったら DB を upsert し、myProfileId を確定する。
-// マッチは name のみで行う(同名はいないという前提)。color や
-// passphrase は後から上書きする運用。
-useEffect(() => {
-  const saveProfile = (nextProfile: UserProfile) => {
-  setProfile(nextProfile);
-  localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
-  if (pendingEntry) {
-    setPage({
-      type: "room",
-      bookId: pendingEntry.bookId,
-      roomId: pendingEntry.roomId,
-    });
-    setPendingEntry(null);
-  }
-  setProfileDialogOpen(false);
-};
-  const clearLocalProfile = () => {
-  localStorage.removeItem("book-room-profile");
-  setProfile(null);
-  setMyProfileId(null);
-};
-  if (!profile) {
-    setMyProfileId(null);
-    return;
-  }
-  (async () => {
-    const { data: matches, error: selectError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("name", profile.name)
-      .order("id", { ascending: true });
-
-    if (selectError) {
-      console.error("profile lookup failed:", selectError);
+  // プロフィールが変わったら DB に upsert し、myProfileId を確定する。
+  // マッチは name のみで行う(同名はいないという前提)。color や
+  // passphrase は同じレコードに対して上書きする運用。
+  useEffect(() => {
+    if (!profile) {
+      setMyProfileId(null);
       return;
     }
+    (async () => {
+      const { data: matches, error: selectError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("name", profile.name)
+        .order("id", { ascending: true });
 
-    const existing = matches?.[0];
-    if (existing) {
-      setMyProfileId(existing.id);
-      const nextColor = profile.color;
-      const nextFavBook = profile.favoriteBookId ?? null;
-      const nextFavNote = profile.favoriteNote ?? null;
-      const nextPassphrase = profile.passphrase ?? null;
-      if (
-        existing.color !== nextColor ||
-        existing.favorite_book_id !== nextFavBook ||
-        existing.favorite_note !== nextFavNote ||
-        existing.passphrase !== nextPassphrase
-      ) {
-        await supabase
-          .from("profiles")
-          .update({
-            color: nextColor,
-            favorite_book_id: nextFavBook,
-            favorite_note: nextFavNote,
-            passphrase: nextPassphrase,
-          })
-          .eq("id", existing.id);
+      if (selectError) {
+        console.error("profile lookup failed:", selectError);
+        return;
       }
-      return;
-    }
 
-    const { data: inserted, error: insertError } = await supabase
-      .from("profiles")
-      .insert({
-        name: profile.name,
-        color: profile.color,
-        favorite_book_id: profile.favoriteBookId ?? null,
-        favorite_note: profile.favoriteNote ?? null,
-        passphrase: profile.passphrase ?? null,
-      })
-      .select()
-      .single();
+      const existing = matches?.[0];
+      if (existing) {
+        setMyProfileId(existing.id);
+        const nextColor = profile.color;
+        const nextFavBook = profile.favoriteBookId ?? null;
+        const nextFavNote = profile.favoriteNote ?? null;
+        const nextPassphrase = profile.passphrase ?? null;
+        if (
+          existing.color !== nextColor ||
+          existing.favorite_book_id !== nextFavBook ||
+          existing.favorite_note !== nextFavNote ||
+          existing.passphrase !== nextPassphrase
+        ) {
+          await supabase
+            .from("profiles")
+            .update({
+              color: nextColor,
+              favorite_book_id: nextFavBook,
+              favorite_note: nextFavNote,
+              passphrase: nextPassphrase,
+            })
+            .eq("id", existing.id);
+        }
+        return;
+      }
 
-    if (insertError) {
-      console.error("profile insert failed:", insertError);
-      return;
+      const { data: inserted, error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          name: profile.name,
+          color: profile.color,
+          favorite_book_id: profile.favoriteBookId ?? null,
+          favorite_note: profile.favoriteNote ?? null,
+          passphrase: profile.passphrase ?? null,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("profile insert failed:", insertError);
+        return;
+      }
+      if (inserted) setMyProfileId(inserted.id);
+    })();
+  }, [
+    profile?.name,
+    profile?.color,
+    profile?.favoriteBookId,
+    profile?.favoriteNote,
+    profile?.passphrase,
+  ]);
+
+  const saveProfile = (nextProfile: UserProfile) => {
+    setProfile(nextProfile);
+    localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
+    if (pendingEntry) {
+      setPage({
+        type: "room",
+        bookId: pendingEntry.bookId,
+        roomId: pendingEntry.roomId,
+      });
+      setPendingEntry(null);
     }
-    if (inserted) setMyProfileId(inserted.id);
-  })();
-}, [
-  profile?.name,
-  profile?.color,
-  profile?.favoriteBookId,
-  profile?.favoriteNote,
-  profile?.passphrase,
-]);
+    setProfileDialogOpen(false);
+  };
+
   const clearLocalProfile = () => {
     localStorage.removeItem("book-room-profile");
     setProfile(null);
@@ -235,15 +231,14 @@ useEffect(() => {
       supabase.from("profiles").select("*"),
     ]);
 
-    // Books and rooms are core — abort only if either fails.
+    // books と rooms はコア。どちらか落ちたら中断。
     if (booksRes.error || roomsRes.error) {
       console.error(booksRes.error ?? roomsRes.error);
       if (!options.silent) setLoading(false);
       return;
     }
 
-    // Traces and profiles are optional — fall back to [] so one
-    // missing table (or RLS blocking) doesn't hide the whole app.
+    // traces と profiles は落ちていても [] で続行する。
     if (tracesRes.error) console.warn("book_traces:", tracesRes.error);
     if (profilesRes.error) console.warn("profiles:", profilesRes.error);
     const tracesData: BookTrace[] = tracesRes.error
@@ -269,14 +264,12 @@ useEffect(() => {
           .in("room_id", roomIds)
           .order("created_at", { ascending: true }),
       ]);
-      // messages is core for existing rooms.
       if (msgRes.error) {
         console.error(msgRes.error);
         if (!options.silent) setLoading(false);
         return;
       }
       messagesData = msgRes.data ?? [];
-      // reservations is optional — don't block the page if it errors.
       if (resRes.error) console.warn("reservations:", resRes.error);
       reservationsData = resRes.error ? [] : (resRes.data ?? []);
     }
@@ -298,7 +291,7 @@ useEffect(() => {
     if (!options.silent) setLoading(false);
   };
 
-  // Initial full load + silent re-load on navigation
+  // 初回フルロード + ページ遷移時のサイレント再取得
   useEffect(() => {
     if (firstLoadRef.current) {
       firstLoadRef.current = false;
@@ -309,9 +302,9 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  // Realtime subscription: reload on any change
+  // Realtime: 変更があったらサイレント再取得
   useEffect(() => {
-   const channel = supabase
+    const channel = supabase
       .channel(`global-changes-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
@@ -355,7 +348,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Visibility resync
+  // タブが可視になった瞬間に再同期
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
@@ -366,17 +359,19 @@ useEffect(() => {
     return () => document.removeEventListener("visibilitychange", onVisibility);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-// Polling fallback: Realtime が届かなかった場合の保険。
+
+  // Polling fallback: Realtime が届かなかった場合の保険。
   // タブがアクティブな間だけ動くので負荷は最小限。
   useEffect(() => {
     const id = setInterval(() => {
       if (document.visibilityState === "visible") {
         loadAll({ silent: true });
       }
-    },  5_000);
+    }, 5_000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const currentBook =
     page.type !== "top" ? books.find((b) => b.id === page.bookId) ?? null : null;
   const currentRoom =
@@ -401,7 +396,7 @@ useEffect(() => {
     return heats;
   }, [books]);
 
-  // Rooms the user has posted in, not expired, with activity newer than lastSeen.
+  // 自分が書き込んでいて、最終閲覧以降に更新のある未期限切れの部屋
   const myUnreadRooms = useMemo(() => {
     const myName = profile?.name;
     if (!myName) return [] as { bookId: string; roomId: number }[];
@@ -419,7 +414,7 @@ useEffect(() => {
     return result;
   }, [books, profile?.name, lastSeenMap]);
 
-  // Any of my reservations starting within the next 24 hours.
+  // 24時間以内に開始する自分の予約があるか
   const hasReservationReminder = useMemo(() => {
     if (!myProfileId) return false;
     const now = Date.now();
@@ -435,7 +430,7 @@ useEffect(() => {
     );
   }, [books, myProfileId]);
 
-  // When we enter a room, stamp last-seen for it.
+  // 部屋に入った瞬間に last-seen を更新
   useEffect(() => {
     if (page.type !== "room") return;
     const roomId = page.roomId;
@@ -450,8 +445,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  // Persist a "contact" message. Returns true on success so the dialog
-  // can show the thank-you panel.
+  // お問い合わせ送信。成功したらダイアログがサンキュー表示に切り替わる。
   const submitContact = async (body: string) => {
     const { error } = await supabase.from("contacts").insert({
       body,
@@ -546,7 +540,7 @@ useEffect(() => {
       return;
     }
 
-    // Auto-reserve the creator as the first attendee
+    // 作成者を最初の予約者として自動登録
     if (payload.scheduledStartAt && myProfileId) {
       await supabase.from("reservations").insert({
         room_id: insertedRoom.id,
@@ -605,13 +599,36 @@ useEffect(() => {
       .eq("id", currentRoom.id);
   };
 
+  // 作成者本人のみ削除可能。RPC 経由で DB 側が二重チェックする。
+  // β方針: 合言葉はローカルプロフィールから自動で渡す(UI 入力なし)。
   const deleteRoom = async (roomId: number) => {
-    const { error } = await supabase.from("rooms").delete().eq("id", roomId);
-    if (error) {
-      console.error(error);
-      alert(`部屋の削除に失敗しました: ${error.message}`);
+    if (myProfileId === null) {
+      alert("プロフィールが未設定です。");
       return;
     }
+
+    const { error } = await supabase.rpc("delete_room_as_creator", {
+      p_room_id: roomId,
+      p_profile_id: myProfileId,
+      p_passphrase: profile?.passphrase ?? null,
+    });
+
+    if (error) {
+      const msg = error.message ?? "";
+      if (msg.includes("not_room_creator")) {
+        alert("この部屋はあなたが作成したものではありません。");
+      } else if (msg.includes("invalid_passphrase")) {
+        alert(
+          "合言葉が一致しません。プロフィールの合言葉を見直して保存し直してください。",
+        );
+      } else if (msg.includes("room_not_found")) {
+        alert("部屋が見つかりません。一覧を更新します。");
+      } else {
+        alert(`削除に失敗しました: ${msg}`);
+      }
+      return;
+    }
+
     await loadAll({ silent: true });
     if (currentBook) {
       setPage({ type: "book", bookId: currentBook.id });
@@ -731,20 +748,20 @@ useEffect(() => {
         currentBook &&
         currentRoom &&
         !currentRoomExpired && (
-        <RoomPage
-         book={currentBook}
-         room={currentRoom}
-         currentProfile={profile}
-         myProfileId={myProfileId}
-         profiles={profiles} 
-         onBack={() => setPage({ type: "book", bookId: currentBook.id })}
-         onSendMessage={sendMessage}
-         onDeleteRoom={() => deleteRoom(currentRoom.id)}
-         onReserve={reserve}
-         onCancelReservation={cancelReservation}
-         onExtend={extendRoom}
-         onLeaveTrace={leaveTrace}
-        />
+          <RoomPage
+            book={currentBook}
+            room={currentRoom}
+            currentProfile={profile}
+            myProfileId={myProfileId}
+            profiles={profiles}
+            onBack={() => setPage({ type: "book", bookId: currentBook.id })}
+            onSendMessage={sendMessage}
+            onDeleteRoom={() => deleteRoom(currentRoom.id)}
+            onReserve={reserve}
+            onCancelReservation={cancelReservation}
+            onExtend={extendRoom}
+            onLeaveTrace={leaveTrace}
+          />
         )}
 
       <CreateRoomDialog
@@ -787,7 +804,7 @@ useEffect(() => {
         onOpenContact={() => setContactOpen(true)}
       />
 
-　　　　<NameSetupDialog
+      <NameSetupDialog
         open={profileDialogOpen}
         initialName={profile?.name ?? ""}
         initialColor={profile?.color ?? "slate"}
