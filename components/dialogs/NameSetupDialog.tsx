@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import type { UserProfile } from "@/lib/types";
+import React, { useEffect, useMemo, useState } from "react";
+import type { Book, UserProfile } from "@/lib/types";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const colorOptions = [
   { value: "slate", label: "グレー", bubble: "bg-slate-100 text-slate-800", chip: "bg-slate-500", name: "text-slate-700" },
@@ -20,6 +21,9 @@ type NameSetupDialogProps = {
   open: boolean;
   initialName: string;
   initialColor: string;
+  initialFavoriteBookId?: string | null;
+  initialFavoriteNote?: string | null;
+  books: Book[];
   onSave: (profile: UserProfile) => void;
   onClose?: () => void;
 };
@@ -28,16 +32,32 @@ export default function NameSetupDialog({
   open,
   initialName,
   initialColor,
+  initialFavoriteBookId,
+  initialFavoriteNote,
+  books,
   onSave,
   onClose,
 }: NameSetupDialogProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
+  const [favoriteBookId, setFavoriteBookId] = useState<string>(
+    initialFavoriteBookId ?? "",
+  );
+  const [favoriteNote, setFavoriteNote] = useState<string>(
+    initialFavoriteNote ?? "",
+  );
 
   useEffect(() => {
     setName(initialName);
     setColor(initialColor);
-  }, [initialName, initialColor, open]);
+    setFavoriteBookId(initialFavoriteBookId ?? "");
+    setFavoriteNote(initialFavoriteNote ?? "");
+  }, [initialName, initialColor, initialFavoriteBookId, initialFavoriteNote, open]);
+
+  const sortedBooks = useMemo(
+    () => [...books].sort((a, b) => a.title.localeCompare(b.title, "ja")),
+    [books],
+  );
 
   return (
     <Dialog
@@ -46,7 +66,7 @@ export default function NameSetupDialog({
         if (!isOpen) onClose?.();
       }}
     >
-      <DialogContent className="rounded-3xl sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>名前を設定</DialogTitle>
         </DialogHeader>
@@ -84,6 +104,38 @@ export default function NameSetupDialog({
               })}
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label>お気に入りの本(任意)</Label>
+            <select
+              value={favoriteBookId}
+              onChange={(e) => setFavoriteBookId(e.target.value)}
+              className="h-10 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
+            >
+              <option value="">選択しない</option>
+              {sortedBooks.map((book) => (
+                <option key={book.id} value={book.id}>
+                  {book.title}
+                  {book.author ? ` / ${book.author}` : ""}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-neutral-500">
+              プロフィール欄に「お気に入りの1冊」として表示されます。
+            </p>
+          </div>
+
+          {favoriteBookId && (
+            <div className="space-y-2">
+              <Label>一言(任意)</Label>
+              <Textarea
+                value={favoriteNote}
+                onChange={(e) => setFavoriteNote(e.target.value)}
+                placeholder="例: 何度読んでも新しい発見がある。"
+                className="min-h-[100px] rounded-2xl"
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -102,6 +154,8 @@ export default function NameSetupDialog({
               onSave({
                 name: name.trim(),
                 color,
+                favoriteBookId: favoriteBookId || null,
+                favoriteNote: favoriteBookId ? favoriteNote.trim() || null : null,
               });
             }}
           >
