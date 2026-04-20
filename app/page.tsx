@@ -69,6 +69,9 @@ export default function Page() {
   const [pendingEntry, setPendingEntry] = useState<
     { bookId: string; roomId: number } | null
   >(null);
+  // プロフィール未設定のまま「本を追加」を押された時に、
+  // プロフィール保存後に続けて AddBookDialog を開くためのフラグ。
+  const [pendingAddBook, setPendingAddBook] = useState(false);
 
   const [myLogOpen, setMyLogOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -209,7 +212,23 @@ export default function Page() {
       });
       setPendingEntry(null);
     }
+    if (pendingAddBook) {
+      setAddBookOpen(true);
+      setPendingAddBook(false);
+    }
     setProfileDialogOpen(false);
+  };
+
+  // 「本を追加」ボタンからのエントリポイント。
+  // プロフィール未設定のときは、先にプロフィール設定へ回して、
+  // 保存が終わったら自動で AddBookDialog を開き直す。
+  const handleOpenAddBook = () => {
+    if (!profile) {
+      setPendingAddBook(true);
+      setProfileDialogOpen(true);
+      return;
+    }
+    setAddBookOpen(true);
   };
 
   const clearLocalProfile = () => {
@@ -477,6 +496,14 @@ export default function Page() {
     author: string;
     firstMessage: string;
   }) => {
+    if (!profile) {
+      alert("本を追加するには、先に名前を設定してください。");
+      setPendingAddBook(true);
+      setAddBookOpen(false);
+      setProfileDialogOpen(true);
+      return;
+    }
+
     const baseId = slugifyTitle(payload.title);
     const nextId = baseId || `book-${Date.now()}`;
 
@@ -487,12 +514,13 @@ export default function Page() {
       return;
     }
 
-    // 1. 本を追加
+    // 1. 本を追加 (追加者の名前もここで保存する)
     const { error: bookError } = await supabase.from("books").insert({
       id: nextId,
       title: payload.title,
       author: payload.author || null,
       description: null,
+      created_by_name: profile.name,
     });
     if (bookError) {
       console.error(bookError);
@@ -762,7 +790,7 @@ export default function Page() {
           onOpenProfileSetting={() => setProfileDialogOpen(true)}
           onOpenMyLog={() => setMyLogOpen(true)}
           onClearLocalProfile={clearLocalProfile}
-          onOpenAddBook={() => setAddBookOpen(true)}
+          onOpenAddBook={handleOpenAddBook}
           onOpenContact={() => setContactOpen(true)}
           onOpenMobileMenu={() => setProfileMenuOpen(true)}
           recentHeats={recentHeats}
