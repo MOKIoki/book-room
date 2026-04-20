@@ -98,7 +98,7 @@ export default function NameSetupDialog({
 
           <div className="space-y-2">
             <Label>発言の色</Label>
-            <div className="grid w-full min-w-0 grid-cols-2 gap-2 overflow-hidden sm:grid-cols-3 sm:gap-3">
+            <div className="flex w-full flex-wrap gap-2 overflow-hidden sm:gap-3">
               {colorOptions.map((option) => {
                 const selected = color === option.value;
                 return (
@@ -106,13 +106,18 @@ export default function NameSetupDialog({
                     key={option.value}
                     type="button"
                     onClick={() => setColor(option.value)}
-                    className={`block w-full min-w-0 overflow-hidden rounded-2xl border p-2 text-left sm:p-3 ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+                    style={{
+                      flex: "0 0 calc(50% - 0.25rem)",
+                      minWidth: 0,
+                      maxWidth: "calc(50% - 0.25rem)",
+                    }}
+                    className={`block overflow-hidden rounded-2xl border p-2 text-left sm:p-3 ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
                   >
                     <div className="mb-1.5 flex min-w-0 items-center gap-2">
                       <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
                       <span className="min-w-0 truncate text-sm font-medium">{option.label}</span>
                     </div>
-                    <div className={`block w-full min-w-0 truncate rounded-xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm ${option.bubble}`}>サンプル投稿</div>
+                    <div className={`block min-w-0 truncate rounded-xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm ${option.bubble}`}>サンプル投稿</div>
                   </button>
                 );
               })}
