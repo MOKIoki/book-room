@@ -63,15 +63,17 @@ function DialogContent({
         style={{
           position: "fixed",
           top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "calc(100vw - 2rem)",
+          left: "1rem",
+          right: "1rem",
+          marginLeft: "auto",
+          marginRight: "auto",
           maxWidth: "32rem",
           maxHeight: "calc(100vh - 2rem)",
           overflowX: "hidden",
           overflowY: "auto",
           boxSizing: "border-box",
           zIndex: 50,
+          transform: "translateY(-50%)",
         }}
         className={cn(
           "grid gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
