@@ -709,7 +709,7 @@ if (existing) {
          room={currentRoom}
          currentProfile={profile}
          myProfileId={myProfileId}
-         profiles={profiles}           {/* ← 追加 */}
+         profiles={profiles} 
          onBack={() => setPage({ type: "book", bookId: currentBook.id })}
          onSendMessage={sendMessage}
          onDeleteRoom={() => deleteRoom(currentRoom.id)}
