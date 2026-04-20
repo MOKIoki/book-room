@@ -704,19 +704,20 @@ if (existing) {
         currentBook &&
         currentRoom &&
         !currentRoomExpired && (
-          <RoomPage
-            book={currentBook}
-            room={currentRoom}
-            currentProfile={profile}
-            myProfileId={myProfileId}
-            onBack={() => setPage({ type: "book", bookId: currentBook.id })}
-            onSendMessage={sendMessage}
-            onDeleteRoom={() => deleteRoom(currentRoom.id)}
-            onReserve={reserve}
-            onCancelReservation={cancelReservation}
-            onExtend={extendRoom}
-            onLeaveTrace={leaveTrace}
-          />
+        <RoomPage
+         book={currentBook}
+         room={currentRoom}
+         currentProfile={profile}
+         myProfileId={myProfileId}
+         profiles={profiles}           {/* ← 追加 */}
+         onBack={() => setPage({ type: "book", bookId: currentBook.id })}
+         onSendMessage={sendMessage}
+         onDeleteRoom={() => deleteRoom(currentRoom.id)}
+         onReserve={reserve}
+         onCancelReservation={cancelReservation}
+         onExtend={extendRoom}
+         onLeaveTrace={leaveTrace}
+        />
         )}
 
       <CreateRoomDialog
