@@ -244,7 +244,7 @@ export default function RoomPage({
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+  <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Button variant="ghost" className="rounded-2xl" onClick={onBack}>
