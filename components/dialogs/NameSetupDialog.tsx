@@ -80,7 +80,7 @@ export default function NameSetupDialog({
         if (!isOpen) onClose?.();
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl p-4 sm:w-full sm:max-w-lg sm:p-6">
         <DialogHeader>
           <DialogTitle>名前を設定</DialogTitle>
         </DialogHeader>
@@ -98,7 +98,7 @@ export default function NameSetupDialog({
 
           <div className="space-y-2">
             <Label>発言の色</Label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
               {colorOptions.map((option) => {
                 const selected = color === option.value;
                 return (
@@ -106,13 +106,13 @@ export default function NameSetupDialog({
                     key={option.value}
                     type="button"
                     onClick={() => setColor(option.value)}
-                    className={`rounded-2xl border p-3 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+                    className={`overflow-hidden rounded-2xl border p-2 text-left sm:p-3 ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
                   >
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className={`h-3 w-3 rounded-full ${option.chip}`} />
-                      <span className="text-sm font-medium">{option.label}</span>
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
+                      <span className="truncate text-sm font-medium">{option.label}</span>
                     </div>
-                    <div className={`rounded-xl px-3 py-2 text-sm ${option.bubble}`}>サンプル投稿</div>
+                    <div className={`truncate rounded-xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm ${option.bubble}`}>サンプル投稿</div>
                   </button>
                 );
               })}
@@ -139,11 +139,13 @@ export default function NameSetupDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  size="icon"
                   className="shrink-0 rounded-2xl"
                   onClick={onRequestAddBook}
+                  aria-label="本を追加"
+                  title="本を追加"
                 >
-                  <Plus className="mr-1 h-4 w-4" />
-                  本を追加
+                  <Plus className="h-4 w-4" />
                 </Button>
               )}
             </div>
