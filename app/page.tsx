@@ -131,6 +131,24 @@ export default function Page() {
 // マッチは name のみで行う(同名はいないという前提)。color や
 // passphrase は後から上書きする運用。
 useEffect(() => {
+  const saveProfile = (nextProfile: UserProfile) => {
+  setProfile(nextProfile);
+  localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
+  if (pendingEntry) {
+    setPage({
+      type: "room",
+      bookId: pendingEntry.bookId,
+      roomId: pendingEntry.roomId,
+    });
+    setPendingEntry(null);
+  }
+  setProfileDialogOpen(false);
+};
+  const clearLocalProfile = () => {
+  localStorage.removeItem("book-room-profile");
+  setProfile(null);
+  setMyProfileId(null);
+};
   if (!profile) {
     setMyProfileId(null);
     return;
