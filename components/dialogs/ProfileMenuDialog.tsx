@@ -66,6 +66,15 @@ export default function ProfileMenuDialog({
           </div>
 
           <MenuItem
+            icon={<UserCog className="h-4 w-4" />}
+            label="名前の設定"
+            onClick={() => {
+              close();
+              onOpenProfileSetting();
+            }}
+          />
+
+          <MenuItem
             icon={<BookOpen className="h-4 w-4" />}
             label="自分の記録"
             badge={
@@ -78,15 +87,6 @@ export default function ProfileMenuDialog({
             onClick={() => {
               close();
               onOpenMyLog();
-            }}
-          />
-
-          <MenuItem
-            icon={<UserCog className="h-4 w-4" />}
-            label="名前の設定"
-            onClick={() => {
-              close();
-              onOpenProfileSetting();
             }}
           />
 
