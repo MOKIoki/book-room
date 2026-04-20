@@ -18,7 +18,7 @@ export type DeleteRoomResult =
     };
 
 export type DeleteRoomIdentity = {
-  profileId: string | null | undefined;
+  profileId: Room["created_by_profile_id"];
   passphrase?: string | null;
 };
 
@@ -32,7 +32,7 @@ export async function deleteRoom(
   identity: DeleteRoomIdentity,
 ): Promise<DeleteRoomResult> {
   const profileId = identity.profileId;
-  if (!profileId) {
+  if (profileId == null) {
     return {
       ok: false,
       reason: "profile_missing",
