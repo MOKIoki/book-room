@@ -413,7 +413,7 @@ export default function TopPage({
           </Card>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-6 grid gap-6 lg:grid-cols-1 sm:grid-cols-2">
           <Card className="rounded-3xl shadow-sm">
             <CardHeader>
               <CardTitle>語らいの置き手紙</CardTitle>
@@ -535,7 +535,7 @@ export default function TopPage({
               該当する本がありません。
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3>
               {filteredBooks.map((book) => {
                 const activeCount = book.rooms.filter((r) => !isRoomExpired(r)).length;
                 return (
