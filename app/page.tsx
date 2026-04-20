@@ -127,68 +127,77 @@ export default function Page() {
   }, []);
 
   // Upsert ProfileRecord whenever local profile changes
+// プロフィールが変わったら DB を upsert し、myProfileId を確定する。
+// マッチは name のみで行う(同名はいないという前提)。color や
+// passphrase は後から上書きする運用。
 useEffect(() => {
-    if (!profile) {
-      setMyProfileId(null);
+  if (!profile) {
+    setMyProfileId(null);
+    return;
+  }
+  (async () => {
+    const { data: matches, error: selectError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("name", profile.name)
+      .order("id", { ascending: true });
+
+    if (selectError) {
+      console.error("profile lookup failed:", selectError);
       return;
     }
-    (async () => {
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("name", profile.name)
-        .eq("color", profile.color)
-        .maybeSingle();
-if (existing) {
-        setMyProfileId(existing.id);
-        const nextFavBook = profile.favoriteBookId ?? null;
-        const nextFavNote = profile.favoriteNote ?? null;
-        const nextPassphrase = profile.passphrase ?? null;
-        if (
-          existing.favorite_book_id !== nextFavBook ||
-          existing.favorite_note !== nextFavNote ||
-          existing.passphrase !== nextPassphrase
-        ) {
-          await supabase
-            .from("profiles")
-            .update({
-              favorite_book_id: nextFavBook,
-              favorite_note: nextFavNote,
-              passphrase: nextPassphrase,
-            })
-            .eq("id", existing.id);
-        }
-        return;
+
+    const existing = matches?.[0];
+    if (existing) {
+      setMyProfileId(existing.id);
+      const nextColor = profile.color;
+      const nextFavBook = profile.favoriteBookId ?? null;
+      const nextFavNote = profile.favoriteNote ?? null;
+      const nextPassphrase = profile.passphrase ?? null;
+      if (
+        existing.color !== nextColor ||
+        existing.favorite_book_id !== nextFavBook ||
+        existing.favorite_note !== nextFavNote ||
+        existing.passphrase !== nextPassphrase
+      ) {
+        await supabase
+          .from("profiles")
+          .update({
+            color: nextColor,
+            favorite_book_id: nextFavBook,
+            favorite_note: nextFavNote,
+            passphrase: nextPassphrase,
+          })
+          .eq("id", existing.id);
       }
-      const { data: inserted, error } = await supabase
-        .from("profiles")
-        .insert({
-          name: profile.name,
-          color: profile.color,
-          favorite_book_id: profile.favoriteBookId ?? null,
-          favorite_note: profile.favoriteNote ?? null,
-          passphrase: profile.passphrase ?? null,
-        })
-        .select()
-        .single();
-      if (!error && inserted) setMyProfileId(inserted.id);
-    })();
- }, [profile?.name, profile?.color, profile?.favoriteBookId, profile?.favoriteNote, profile?.passphrase]);
-
-  const saveProfile = (nextProfile: UserProfile) => {
-    setProfile(nextProfile);
-    localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
-    if (pendingEntry) {
-      setPage({
-        type: "room",
-        bookId: pendingEntry.bookId,
-        roomId: pendingEntry.roomId,
-      });
-      setPendingEntry(null);
+      return;
     }
-    setProfileDialogOpen(false);
-  };
 
+    const { data: inserted, error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        name: profile.name,
+        color: profile.color,
+        favorite_book_id: profile.favoriteBookId ?? null,
+        favorite_note: profile.favoriteNote ?? null,
+        passphrase: profile.passphrase ?? null,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("profile insert failed:", insertError);
+      return;
+    }
+    if (inserted) setMyProfileId(inserted.id);
+  })();
+}, [
+  profile?.name,
+  profile?.color,
+  profile?.favoriteBookId,
+  profile?.favoriteNote,
+  profile?.passphrase,
+]);
   const clearLocalProfile = () => {
     localStorage.removeItem("book-room-profile");
     setProfile(null);
