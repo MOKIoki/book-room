@@ -535,7 +535,7 @@ export default function TopPage({
               該当する本がありません。
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3>
+           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {filteredBooks.map((book) => {
                 const activeCount = book.rooms.filter((r) => !isRoomExpired(r)).length;
                 return (
