@@ -18,7 +18,7 @@ export default function ExpiredRoomPage({
   onBack,
 }: ExpiredRoomPageProps) {
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Button variant="ghost" className="mb-4 rounded-2xl" onClick={onBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
