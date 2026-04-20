@@ -146,6 +146,8 @@ type RoomPageProps = {
   room: Room;
   currentProfile: UserProfile | null;
   myProfileId: number | null;
+  /** 作成者表示用。id → name / color を引けるテーブル。 */
+  profiles?: { id: number; name: string; color: string }[];
   onBack: () => void;
   onSendMessage: (text: string) => Promise<void>;
   onDeleteRoom: () => Promise<void>;
@@ -160,6 +162,7 @@ export default function RoomPage({
   room,
   currentProfile,
   myProfileId,
+  profiles,
   onBack,
   onSendMessage,
   onDeleteRoom,
@@ -168,6 +171,11 @@ export default function RoomPage({
   onExtend,
   onLeaveTrace,
 }: RoomPageProps) {
+  const creator =
+    room.created_by_profile_id != null
+      ? profiles?.find((p) => p.id === room.created_by_profile_id) ?? null
+      : null;
+  const creatorColorStyle = getColorStyle(creator?.color);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [presenceCount, setPresenceCount] = useState(1);
@@ -258,19 +266,25 @@ export default function RoomPage({
             {book.title} に戻る
           </Button>
 
-          {isCreator && (
-            <Button
-              variant="destructive"
-              className="rounded-2xl"
-              onClick={async () => {
-                const ok = window.confirm("この部屋を削除しますか？");
-                if (!ok) return;
-                await onDeleteRoom();
-              }}
-            >
-              部屋を削除
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* TODO: 動作確認が終わったら消す */}
+            <span className="text-[10px] text-neutral-400">
+              creator={String(room.created_by_profile_id)} / me={String(myProfileId)}
+            </span>
+            {isCreator && (
+              <Button
+                variant="destructive"
+                className="rounded-2xl"
+                onClick={async () => {
+                  const ok = window.confirm("この部屋を削除しますか？");
+                  if (!ok) return;
+                  await onDeleteRoom();
+                }}
+              >
+                部屋を削除
+              </Button>
+            )}
+          </div>
         </div>
 
         <Card className="rounded-3xl border-0 shadow-sm">
@@ -288,6 +302,18 @@ export default function RoomPage({
               <RoomBadge room={room} />
             </div>
             <div className="flex flex-wrap gap-4 pt-2 text-sm text-neutral-500">
+              {creator ? (
+                <span className="inline-flex items-center gap-1">
+                  作成:
+                  <span className={`font-medium ${creatorColorStyle.name}`}>
+                    {creator.name}
+                  </span>
+                </span>
+              ) : room.created_by_profile_id != null ? (
+                <span className="inline-flex items-center gap-1">
+                  作成: <span className="text-neutral-400">（不明）</span>
+                </span>
+              ) : null}
               <span className="inline-flex items-center gap-1">
                 <Users className="h-4 w-4" />
                 {presenceCount}人が参加中
