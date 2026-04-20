@@ -212,10 +212,9 @@ export default function BookPage({
   useNow();
 
   const visibleRooms = [...getActiveRooms(book.rooms)].sort(
-  (a, b) =>
-    new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-);
-
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+  );
 
   const roomLimitReached = visibleRooms.length >= MAX_ACTIVE_ROOMS_PER_BOOK;
 
@@ -234,7 +233,7 @@ export default function BookPage({
     .slice(0, 4);
 
   return (
-  <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
+    <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Button variant="ghost" className="rounded-2xl" onClick={onBack}>
@@ -274,13 +273,20 @@ export default function BookPage({
               </Button>
             </div>
 
-            <CardDescription className="max-w-3xl pt-2 text-base leading-7">
-              {book.description}
-            </CardDescription>
+            {book.description && (
+              <CardDescription className="max-w-3xl pt-2 text-base leading-7">
+                {book.description}
+              </CardDescription>
+            )}
 
-            {book.updated_by_name && (
-              <div className="pt-2 text-xs text-neutral-500">
-                最終更新者: {book.updated_by_name}
+            {(book.created_by_name || book.updated_by_name) && (
+              <div className="space-y-1 pt-2 text-xs text-neutral-500">
+                {book.created_by_name && (
+                  <div>追加した人: {book.created_by_name}</div>
+                )}
+                {book.updated_by_name && (
+                  <div>最終更新者: {book.updated_by_name}</div>
+                )}
               </div>
             )}
           </CardHeader>
