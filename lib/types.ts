@@ -48,6 +48,8 @@ export type Book = {
   description: string | null;
   updated_at: string;
   updated_by_name: string | null;
+  /** 本を追加した人の名前 (追加時点のスナップショット)。 */
+  created_by_name: string | null;
   rooms: Room[];
   traces: BookTrace[];
 };
