@@ -541,14 +541,14 @@ export default function TopPage({
                 return (
                   <Card key={book.id} className="rounded-3xl shadow-sm">
                     <CardHeader className="space-y-2 pl-5">
-                      <CardTitle className="flex items-center gap-2 text-xl leading-7">
-                        <span className="whitespace-nowrap">{book.title}</span>
-                        {isBookNew(book) && <NewMark />}
+                      <CardTitle className="flex min-w-0 items-center gap-2 text-xl leading-7">
+                      <span className="break-words">{book.title}</span>
+                       {isBookNew(book) && <NewMark />}
                       </CardTitle>
                       <div className="text-sm text-neutral-500">{book.author}</div>
                     </CardHeader>
 
-                    <CardContent className="flex items-end justify-between gap-4">
+                   <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                       <div className="text-sm text-neutral-500">
                         稼働中の部屋 {activeCount} / 6
                       </div>
