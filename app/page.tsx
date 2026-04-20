@@ -139,20 +139,22 @@ useEffect(() => {
         .eq("name", profile.name)
         .eq("color", profile.color)
         .maybeSingle();
-      if (existing) {
+if (existing) {
         setMyProfileId(existing.id);
-        // お気に入りが変わっていたら更新
         const nextFavBook = profile.favoriteBookId ?? null;
         const nextFavNote = profile.favoriteNote ?? null;
+        const nextPassphrase = profile.passphrase ?? null;
         if (
           existing.favorite_book_id !== nextFavBook ||
-          existing.favorite_note !== nextFavNote
+          existing.favorite_note !== nextFavNote ||
+          existing.passphrase !== nextPassphrase
         ) {
           await supabase
             .from("profiles")
             .update({
               favorite_book_id: nextFavBook,
               favorite_note: nextFavNote,
+              passphrase: nextPassphrase,
             })
             .eq("id", existing.id);
         }
@@ -171,7 +173,7 @@ useEffect(() => {
         .single();
       if (!error && inserted) setMyProfileId(inserted.id);
     })();
-  }, [profile?.name, profile?.color, profile?.favoriteBookId, profile?.favoriteNote]);
+ }, [profile?.name, profile?.color, profile?.favoriteBookId, profile?.favoriteNote, profile?.passphrase]);
 
   const saveProfile = (nextProfile: UserProfile) => {
     setProfile(nextProfile);
@@ -757,18 +759,20 @@ useEffect(() => {
         onOpenContact={() => setContactOpen(true)}
       />
 
-      <NameSetupDialog
+　　　　<NameSetupDialog
         open={profileDialogOpen}
         initialName={profile?.name ?? ""}
         initialColor={profile?.color ?? "slate"}
         initialFavoriteBookId={profile?.favoriteBookId ?? null}
         initialFavoriteNote={profile?.favoriteNote ?? null}
+        initialPassphrase={profile?.passphrase ?? null}
         books={books}
         onSave={saveProfile}
         onClose={() => {
           setProfileDialogOpen(false);
           setPendingEntry(null);
         }}
+        onRequestAddBook={() => setAddBookOpen(true)}
       />
     </>
   );
