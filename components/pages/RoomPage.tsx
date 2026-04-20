@@ -181,6 +181,12 @@ export default function RoomPage({
     : null;
   const isBeforeStart = scheduledMs !== null && scheduledMs > Date.now();
 
+  // 作成者本人のみ削除ボタンを表示する。myProfileId が未確定の間は出さない。
+  const isCreator =
+    myProfileId !== null &&
+    room.created_by_profile_id !== null &&
+    myProfileId === room.created_by_profile_id;
+
   const myReservation = useMemo(
     () =>
       myProfileId
@@ -244,7 +250,7 @@ export default function RoomPage({
   };
 
   return (
-  <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
+    <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Button variant="ghost" className="rounded-2xl" onClick={onBack}>
@@ -252,17 +258,19 @@ export default function RoomPage({
             {book.title} に戻る
           </Button>
 
-          <Button
-            variant="destructive"
-            className="rounded-2xl"
-            onClick={async () => {
-              const ok = window.confirm("この部屋を削除しますか？");
-              if (!ok) return;
-              await onDeleteRoom();
-            }}
-          >
-            部屋を削除
-          </Button>
+          {isCreator && (
+            <Button
+              variant="destructive"
+              className="rounded-2xl"
+              onClick={async () => {
+                const ok = window.confirm("この部屋を削除しますか？");
+                if (!ok) return;
+                await onDeleteRoom();
+              }}
+            >
+              部屋を削除
+            </Button>
+          )}
         </div>
 
         <Card className="rounded-3xl border-0 shadow-sm">
@@ -419,7 +427,7 @@ export default function RoomPage({
           </CardContent>
         </Card>
 
-{!isBeforeStart && (
+        {!isBeforeStart && (
           <Card className="mt-6 rounded-3xl border-0 shadow-sm">
             <button
               type="button"
