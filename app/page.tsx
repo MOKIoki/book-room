@@ -470,10 +470,12 @@ export default function Page() {
     setPage({ type: "room", bookId, roomId });
   };
 
+  // 本を追加するときは、必ず「最初の部屋」と「最初の投稿」まで一緒に作る。
+  // 本だけが増えて会話の入口が無い状態を作らないための方針。
   const createBook = async (payload: {
     title: string;
     author: string;
-    description: string;
+    firstMessage: string;
   }) => {
     const baseId = slugifyTitle(payload.title);
     const nextId = baseId || `book-${Date.now()}`;
@@ -485,21 +487,68 @@ export default function Page() {
       return;
     }
 
-    const { error } = await supabase.from("books").insert({
+    // 1. 本を追加
+    const { error: bookError } = await supabase.from("books").insert({
       id: nextId,
       title: payload.title,
       author: payload.author || null,
-      description: payload.description || null,
+      description: null,
     });
-
-    if (error) {
-      console.error(error);
+    if (bookError) {
+      console.error(bookError);
       alert("本の追加に失敗しました");
       return;
     }
 
+    // 2. 最初の部屋を自動作成 (ふらっと歓迎 / 未読歓迎 / 7 日)
+    const DEFAULT_DURATION_HOURS = 168;
+    const expiresAt = new Date(
+      Date.now() + DEFAULT_DURATION_HOURS * 60 * 60 * 1000,
+    ).toISOString();
+
+    const { data: insertedRoom, error: roomError } = await supabase
+      .from("rooms")
+      .insert({
+        book_id: nextId,
+        title: "最初のことば",
+        entry_type: "welcome",
+        spoiler: "none",
+        active_users: 1,
+        expires_at: expiresAt,
+        scheduled_start_at: null,
+        created_by_profile_id: myProfileId,
+      })
+      .select()
+      .single();
+
+    if (roomError || !insertedRoom) {
+      console.error(roomError);
+      alert(
+        "本は追加できましたが、部屋の自動作成に失敗しました。本のページから部屋を作ってください。",
+      );
+      setAddBookOpen(false);
+      await loadAll({ silent: true });
+      setPage({ type: "book", bookId: nextId });
+      return;
+    }
+
+    // 3. 最初の投稿を入れる
+    const sender = profile?.name ?? "you";
+    const senderColor = profile?.color ?? "slate";
+    const { error: messageError } = await supabase.from("messages").insert({
+      room_id: insertedRoom.id,
+      user_name: sender,
+      user_color: senderColor,
+      text: payload.firstMessage,
+    });
+    if (messageError) {
+      console.error(messageError);
+      // 投稿に失敗しても本と部屋はできているので、部屋に連れていって続行。
+    }
+
     setAddBookOpen(false);
     await loadAll({ silent: true });
+    setPage({ type: "room", bookId: nextId, roomId: insertedRoom.id });
   };
 
   const createRoom = async (payload: {
