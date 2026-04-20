@@ -47,6 +47,38 @@ function DialogOverlay({
   )
 }
 
+/**
+ * visual viewport に合わせたダイアログサイズを返すフック。
+ * vw / calc(100vw) が一部モバイルブラウザで信用できないため、
+ * window.innerWidth / innerHeight から直接ピクセルで算出する。
+ */
+function useDialogSize() {
+  const compute = React.useCallback(() => {
+    if (typeof window === "undefined") {
+      return { width: 500, maxHeight: 600 };
+    }
+    const margin = 32; // 左右 16px ずつ
+    const width = Math.min(window.innerWidth - margin, 560); // 最大 35rem 相当
+    const maxHeight = window.innerHeight - margin;
+    return { width, maxHeight };
+  }, []);
+
+  const [size, setSize] = React.useState(compute);
+
+  React.useEffect(() => {
+    const update = () => setSize(compute());
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
+  }, [compute]);
+
+  return size;
+}
+
 function DialogContent({
   className,
   children,
@@ -55,6 +87,8 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  const { width, maxHeight } = useDialogSize()
+
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -62,21 +96,18 @@ function DialogContent({
         data-slot="dialog-content"
         style={{
           position: "fixed",
+          left: "50%",
           top: "50%",
-          left: "1rem",
-          right: "1rem",
-          marginLeft: "auto",
-          marginRight: "auto",
-          maxWidth: "32rem",
-          maxHeight: "calc(100vh - 2rem)",
+          width: `${width}px`,
+          maxHeight: `${maxHeight}px`,
+          transform: "translate(-50%, -50%)",
           overflowX: "hidden",
           overflowY: "auto",
           boxSizing: "border-box",
           zIndex: 50,
-          transform: "translateY(-50%)",
         }}
         className={cn(
-          "grid gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "grid gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:p-6",
           className
         )}
         {...props}
