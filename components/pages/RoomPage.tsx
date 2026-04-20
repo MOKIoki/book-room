@@ -267,10 +267,6 @@ export default function RoomPage({
           </Button>
 
           <div className="flex items-center gap-2">
-            {/* TODO: 動作確認が終わったら消す */}
-            <span className="text-[10px] text-neutral-400">
-              creator={String(room.created_by_profile_id)} / me={String(myProfileId)}
-            </span>
             {isCreator && (
               <Button
                 variant="destructive"
