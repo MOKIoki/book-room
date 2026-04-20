@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import type { Book, UserProfile } from "@/lib/types";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,9 +24,11 @@ type NameSetupDialogProps = {
   initialColor: string;
   initialFavoriteBookId?: string | null;
   initialFavoriteNote?: string | null;
+  initialPassphrase?: string | null;
   books: Book[];
   onSave: (profile: UserProfile) => void;
   onClose?: () => void;
+  onRequestAddBook?: () => void;
 };
 
 export default function NameSetupDialog({
@@ -34,9 +37,11 @@ export default function NameSetupDialog({
   initialColor,
   initialFavoriteBookId,
   initialFavoriteNote,
+  initialPassphrase,
   books,
   onSave,
   onClose,
+  onRequestAddBook,
 }: NameSetupDialogProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
@@ -46,13 +51,22 @@ export default function NameSetupDialog({
   const [favoriteNote, setFavoriteNote] = useState<string>(
     initialFavoriteNote ?? "",
   );
+  const [passphrase, setPassphrase] = useState<string>(initialPassphrase ?? "");
 
   useEffect(() => {
     setName(initialName);
     setColor(initialColor);
     setFavoriteBookId(initialFavoriteBookId ?? "");
     setFavoriteNote(initialFavoriteNote ?? "");
-  }, [initialName, initialColor, initialFavoriteBookId, initialFavoriteNote, open]);
+    setPassphrase(initialPassphrase ?? "");
+  }, [
+    initialName,
+    initialColor,
+    initialFavoriteBookId,
+    initialFavoriteNote,
+    initialPassphrase,
+    open,
+  ]);
 
   const sortedBooks = useMemo(
     () => [...books].sort((a, b) => a.title.localeCompare(b.title, "ja")),
@@ -107,19 +121,32 @@ export default function NameSetupDialog({
 
           <div className="space-y-2">
             <Label>お気に入りの本(任意)</Label>
-            <select
-              value={favoriteBookId}
-              onChange={(e) => setFavoriteBookId(e.target.value)}
-              className="h-10 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
-            >
-              <option value="">選択しない</option>
-              {sortedBooks.map((book) => (
-                <option key={book.id} value={book.id}>
-                  {book.title}
-                  {book.author ? ` / ${book.author}` : ""}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={favoriteBookId}
+                onChange={(e) => setFavoriteBookId(e.target.value)}
+                className="h-10 min-w-0 flex-1 rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
+              >
+                <option value="">選択しない</option>
+                {sortedBooks.map((book) => (
+                  <option key={book.id} value={book.id}>
+                    {book.title}
+                    {book.author ? ` / ${book.author}` : ""}
+                  </option>
+                ))}
+              </select>
+              {onRequestAddBook && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 rounded-2xl"
+                  onClick={onRequestAddBook}
+                >
+                  <Plus className="mr-1 h-4 w-4" />
+                  本を追加
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-neutral-500">
               プロフィール欄に「お気に入りの1冊」として表示されます。
             </p>
@@ -136,6 +163,19 @@ export default function NameSetupDialog({
               />
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>合言葉(任意)</Label>
+            <Input
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+              placeholder="例: ことりのさえずり"
+              className="rounded-2xl"
+            />
+            <p className="text-xs text-neutral-500">
+              別の端末から同じ名前で入る時に本人確認に使います。他の人には見えません。
+            </p>
+          </div>
         </div>
 
         <DialogFooter>
@@ -156,6 +196,7 @@ export default function NameSetupDialog({
                 color,
                 favoriteBookId: favoriteBookId || null,
                 favoriteNote: favoriteBookId ? favoriteNote.trim() || null : null,
+                passphrase: passphrase.trim() || null,
               });
             }}
           >
