@@ -85,7 +85,7 @@ export default function NameSetupDialog({
           <DialogTitle>名前を設定</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <div className="space-y-5 py-2 max-h-[65vh] overflow-y-auto px-1">
           <div className="space-y-2">
             <Label>表示名</Label>
             <Input
