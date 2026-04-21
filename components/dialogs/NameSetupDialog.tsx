@@ -91,7 +91,7 @@ export default function NameSetupDialog({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例: tomoki / 読書猫 / N"
+              placeholder="例: hiro / 読書猫 / N"
               className="rounded-2xl"
             />
           </div>
