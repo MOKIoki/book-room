@@ -80,7 +80,7 @@ export default function NameSetupDialog({
         if (!isOpen) onClose?.();
       }}
     >
-      <DialogContent className="rounded-3xl sm:max-w-lg">
+      <DialogContent className="w-[calc(100vw-24px)] max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl p-0">
         <DialogHeader>
           <DialogTitle>名前を設定</DialogTitle>
         </DialogHeader>
