@@ -81,9 +81,9 @@ export default function NameSetupDialog({
       }}
     >
       <DialogContent className="w-[calc(100vw-16px)] sm:w-[calc(100vw-32px)] max-w-2xl max-h-[92vh] overflow-hidden rounded-2xl p-0">
-        <DialogHeader>
-          <DialogTitle>名前を設定</DialogTitle>
-        </DialogHeader>
+          <DialogHeader className="px-4 pt-6 pb-2 sm:px-6">
+           <DialogTitle>名前を設定</DialogTitle>
+          </DialogHeader>
 
         <div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
           <div className="space-y-2">
