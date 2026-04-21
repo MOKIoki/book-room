@@ -80,12 +80,12 @@ export default function NameSetupDialog({
         if (!isOpen) onClose?.();
       }}
     >
-      <DialogContent className="w-[calc(100vw-24px)] max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl p-0">
+      <DialogContent className="w-[calc(100vw-32px)] max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl p-0">
         <DialogHeader>
           <DialogTitle>名前を設定</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-2 max-h-[65vh] overflow-y-auto px-1">
+        <div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
           <div className="space-y-2">
             <Label>表示名</Label>
             <Input
@@ -180,14 +180,14 @@ export default function NameSetupDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="border-t px-4 py-4">
           {onClose && (
             <Button variant="outline" className="rounded-2xl" onClick={onClose}>
               閉じる
             </Button>
           )}
           <Button
-            className="rounded-2xl"
+            className="rounded-2xl w-full sm:w-auto"
             onClick={() => {
               if (!name.trim()) {
                 alert("表示名を入力してください");
