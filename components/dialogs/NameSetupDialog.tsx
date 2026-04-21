@@ -106,13 +106,13 @@ export default function NameSetupDialog({
                     key={option.value}
                     type="button"
                     onClick={() => setColor(option.value)}
-                    className={`w-full overflow-hidden rounded-2xl border p-3 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+                    className={`w-full overflow-hidden rounded-2xl border p-2.5 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
                   >
                     <div className="mb-2 flex min-w-0 items-center gap-2">
                      <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
-                     <span className="min-w-0 truncate text-sm font-medium">{option.label}</span>
+                     <span className="min-w-0 truncate text-[15px] font-medium">{option.label}</span>
                     </div>
-                    <div className={`mt-3 block min-w-0 truncate rounded-xl px-3 py-2 text-sm ${option.bubble}`}>サンプル投稿</div>
+                    <div className={`mt-2.5 block min-w-0 truncate rounded-xl px-3 py-1.5 text-sm ${option.bubble}`}>サンプル投稿</div>
                   </button>
                 );
               })}
