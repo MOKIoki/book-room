@@ -98,7 +98,7 @@ export default function NameSetupDialog({
 
           <div className="space-y-2">
             <Label>発言の色</Label>
-            <div className="flex w-full flex-wrap gap-2 overflow-hidden sm:gap-3">
+           <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
               {colorOptions.map((option) => {
                 const selected = color === option.value;
                 return (
