@@ -80,7 +80,7 @@ export default function NameSetupDialog({
         if (!isOpen) onClose?.();
       }}
     >
-      <DialogContent className="w-[calc(100vw-32px)] max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl p-0">
+      <DialogContent className="w-[calc(100vw-16px)] sm:w-[calc(100vw-32px)] max-w-2xl max-h-[92vh] overflow-hidden rounded-2xl p-0">
         <DialogHeader>
           <DialogTitle>名前を設定</DialogTitle>
         </DialogHeader>
@@ -106,9 +106,9 @@ export default function NameSetupDialog({
                     key={option.value}
                     type="button"
                     onClick={() => setColor(option.value)}
-                    className={`w-full overflow-hidden rounded-2xl border p-2.5 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+                    className={`w-full overflow-hidden rounded-2xl border p-2 sm:p-3 text-left ...`}
                   >
-                    <div className="mb-2 flex min-w-0 items-center gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
                      <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
                      <span className="min-w-0 truncate text-[15px] font-medium">{option.label}</span>
                     </div>
@@ -180,7 +180,7 @@ export default function NameSetupDialog({
           </div>
         </div>
 
-        <DialogFooter className="border-t px-4 py-4">
+        <DialogFooter className="border-t px-4 py-3 sm:py-4">
           {onClose && (
             <Button variant="outline" className="rounded-2xl" onClick={onClose}>
               閉じる
