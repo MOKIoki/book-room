@@ -528,7 +528,7 @@ export default function Page() {
       return;
     }
 
-    // 2. 最初の部屋を自動作成 (ふらっと歓迎 / 未読歓迎 / 7 日)
+    // 2. 最初の部屋を自動作成 (ふらっと歓迎 / 読了者向け / 7 日)
     const DEFAULT_DURATION_HOURS = 168;
     const expiresAt = new Date(
       Date.now() + DEFAULT_DURATION_HOURS * 60 * 60 * 1000,
@@ -540,7 +540,7 @@ export default function Page() {
         book_id: nextId,
         title: "最初のことば",
         entry_type: "welcome",
-        spoiler: "none",
+        spoiler: "read",
         active_users: 1,
         expires_at: expiresAt,
         scheduled_start_at: null,
