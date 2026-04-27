@@ -881,14 +881,27 @@ const cancelReservation = async () => {
     }
   };
 
-  const leaveTrace = async (body: string) => {
+const leaveTrace = async (body: string) => {
     if (!currentRoom || !currentBook) return;
-    const { error } = await supabase.from("book_traces").insert({
-      book_id: currentBook.id,
-      room_id: currentRoom.id,
-      room_title: currentRoom.title,
-      body,
-      created_by_name: profile?.name ?? null,
+    if (myProfileId === null || !localBrowserToken) {
+      alert("プロフィールが未設定です。");
+      return;
+    }
+    // T1: book_traces 直接 INSERT を create_trace_as_owner RPC に置換。
+    // 注: room_title / created_by_name はクライアントから渡さず、サーバ側
+    // (08 RPC) で room.title / profiles.name を snapshot 取得する。
+    // 08 RPC は以下を強制する (= UI 側でも活性条件を絞るのが理想):
+    //   - room.entry_type != 'welcome'
+    //   - room.expires_at IS NOT NULL AND now() >= expires_at (= 受付終了済み)
+    //   - room.created_by_profile_id == p_profile_id (= 部屋作成者本人)
+    //   - 1 部屋 1 trace (UNIQUE)
+    const { error } = await supabase.rpc("create_trace_as_owner", {
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: profile?.passphrase ?? null,
+      p_book_id: currentBook.id,
+      p_room_id: currentRoom.id,
+      p_body: body,
     });
     if (error) {
       console.error(error);
