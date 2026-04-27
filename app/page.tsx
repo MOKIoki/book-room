@@ -685,7 +685,7 @@ const hasFavorites =
     setPage({ type: "room", bookId: nextId, roomId: insertedRoom.id });
   };
 
-  const createRoom = async (payload: {
+const createRoom = async (payload: {
     title: string;
     entryType: "open" | "approval";
     spoiler: "none" | "progress" | "read";
@@ -694,59 +694,82 @@ const hasFavorites =
     scheduledStartAt: string | null;
   }) => {
     if (!currentBook) return;
+    if (myProfileId === null || !localBrowserToken) {
+      alert("プロフィールが未設定です。");
+      return;
+    }
 
-    const baseMs = payload.scheduledStartAt
-      ? new Date(payload.scheduledStartAt).getTime()
-      : Date.now();
-    const expiresAt = new Date(
-      baseMs + payload.durationHours * 60 * 60 * 1000,
-    ).toISOString();
+    // R1: 旧 vocab → 新 vocab マッピング (dialog 改修は X2 で別途)。
+    //   open     → discussion (= 議論部屋)
+    //   approval → reservation (= 予約読書会)
+    const newEntryType =
+      payload.entryType === "approval" ? "reservation" : "discussion";
 
-    const { data: insertedRoom, error: roomError } = await supabase
-      .from("rooms")
-      .insert({
-        book_id: currentBook.id,
-        title: payload.title,
-        entry_type: payload.entryType,
-        spoiler: payload.spoiler,
-        active_users: 1,
-        expires_at: expiresAt,
-        scheduled_start_at: payload.scheduledStartAt,
-        created_by_profile_id: myProfileId,
-      })
-      .select()
-      .single();
+    // 06 RPC は p_writable_days integer (1〜30) を要求する。
+    // 旧 durationHours から日数に変換 (切り上げ + clamp)。
+    // 注意: 予約読書会では「開始時刻基準」→「now() 基準」に意味が変わる。
+    // 11_pre_checklist の「予約読書会 expires_at UX」課題を参照。
+    const writableDays = Math.max(
+      1,
+      Math.min(30, Math.ceil(payload.durationHours / 24)),
+    );
 
-    if (roomError) {
+    // (1) 部屋作成
+    const { data: createdRoomId, error: roomError } = await supabase.rpc(
+      "create_room_for_book",
+      {
+        p_profile_id: myProfileId,
+        p_browser_token: localBrowserToken,
+        p_passphrase: profile?.passphrase ?? null,
+        p_book_id: currentBook.id,
+        p_title: payload.title,
+        p_entry_type: newEntryType,
+        p_spoiler: payload.spoiler,
+        p_scheduled_start_at: payload.scheduledStartAt,
+        p_writable_days: writableDays,
+      },
+    );
+
+    if (roomError || typeof createdRoomId !== "number") {
       console.error(roomError);
       alert("部屋の作成に失敗しました");
       return;
     }
 
-    // 作成者を最初の予約者として自動登録
-    if (payload.scheduledStartAt && myProfileId) {
-      await supabase.from("reservations").insert({
-        room_id: insertedRoom.id,
-        profile_id: myProfileId,
-        profile_name: profile?.name ?? null,
-      });
+    // (2) 予約読書会なら作成者を最初の予約者として自動登録
+    //   scheduledStartAt が set の場合 = entry_type='reservation' の前提。
+    //   09 RPC 側で entry_type / 開始前 / 受付中 を再検証する。
+    if (payload.scheduledStartAt) {
+      const { error: resvError } = await supabase.rpc(
+        "create_reservation_as_owner",
+        {
+          p_profile_id: myProfileId,
+          p_browser_token: localBrowserToken,
+          p_passphrase: profile?.passphrase ?? null,
+          p_room_id: createdRoomId,
+        },
+      );
+      if (resvError) console.error("auto reservation failed:", resvError);
     }
 
+    // (3) 最初のメッセージ
     if (payload.firstMessage) {
-      const sender = profile?.name ?? "you";
-      const senderColor = profile?.color ?? "slate";
-      const { error: messageError } = await supabase.from("messages").insert({
-        room_id: insertedRoom.id,
-        user_name: sender,
-        user_color: senderColor,
-        text: payload.firstMessage,
-      });
-      if (messageError) console.error(messageError);
+      const { error: messageError } = await supabase.rpc(
+        "send_message_as_owner",
+        {
+          p_profile_id: myProfileId,
+          p_browser_token: localBrowserToken,
+          p_passphrase: profile?.passphrase ?? null,
+          p_room_id: createdRoomId,
+          p_body: payload.firstMessage,
+        },
+      );
+      if (messageError) console.error("first message failed:", messageError);
     }
 
     setCreateOpen(false);
     await loadAll({ silent: true });
-    setPage({ type: "room", bookId: currentBook.id, roomId: insertedRoom.id });
+    setPage({ type: "room", bookId: currentBook.id, roomId: createdRoomId });
   };
 
   const sendMessage = async (text: string) => {
