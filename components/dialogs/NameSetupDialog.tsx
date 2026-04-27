@@ -106,7 +106,7 @@ export default function NameSetupDialog({
                     key={option.value}
                     type="button"
                     onClick={() => setColor(option.value)}
-                    className={`w-full overflow-hidden rounded-2xl border p-2 sm:p-3 text-left ...`}
+                    className={`w-full overflow-hidden rounded-2xl border p-2 sm:p-3 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
                   >
                     <div className="flex items-center gap-2 sm:gap-3">
                      <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
