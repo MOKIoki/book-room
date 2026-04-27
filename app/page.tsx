@@ -165,8 +165,6 @@ export default function Page() {
             passphrase: string | null;
           }
         | undefined;
-      
-      let foundViaToken = false; // P1: get_my_profile で見つかったか
 
 // P1: get_my_profile (id + 公開列 5 個) を 1 RPC 呼び出しに統一。
       //   従来: get_my_profile_id + profiles 直 SELECT (= 2 段、direct SELECT 残存)
@@ -195,69 +193,31 @@ export default function Page() {
             favorite_note: row.favorite_note,
             passphrase: null, // get_my_profile は passphrase を返さない
           };
-          foundViaToken = true;
         }
       }
 
-      if (!existing) {
-        const { data: matches, error: selectError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("name", profile.name)
-          .order("id", { ascending: true });
-
-        if (selectError) {
-          console.error("profile lookup failed:", selectError);
-          return;
-        }
-        existing = matches?.[0];
-      }
       if (existing) {
         setMyProfileId(existing.id);
         const nextColor = profile.color;
         const nextFavBook = profile.favoriteBookId ?? null;
         const nextFavNote = profile.favoriteNote ?? null;
         const nextPassphrase = profile.passphrase ?? null;
-if (foundViaToken) {
-          // P1 RPC fast path: get_my_profile が passphrase を返さないため
-          // 完全な change detection が不可。token 一致時は常に RPC UPDATE を
-          // 試行する (= idempotent、副作用なし)。useEffect 1 fire = 1 UPDATE。
-          const { error: updateError } = await supabase.rpc(
-            "update_profile_as_owner",
-            {
-              p_profile_id: existing.id,
-              p_browser_token: localBrowserToken,
-              p_passphrase: null,
-              p_new_name: profile.name,
-              p_new_color: nextColor,
-              p_new_favorite_book_id: nextFavBook,
-              p_new_favorite_note: nextFavNote,
-              p_new_passphrase: nextPassphrase ?? "",
-            },
-          );
-          if (updateError) {
-            console.error("update_profile_as_owner failed:", updateError);
-          }
-        } else {
-          // legacy 名前 match path (P2/P3 で削除予定)。
-          // 直接 SELECT で取った existing には passphrase が入っているので、
-          // 従来の change detection + direct UPDATE を維持。
-          if (
-            existing.color !== nextColor ||
-            existing.favorite_book_id !== nextFavBook ||
-            existing.favorite_note !== nextFavNote ||
-            existing.passphrase !== nextPassphrase
-          ) {
-            await supabase
-              .from("profiles")
-              .update({
-                color: nextColor,
-                favorite_book_id: nextFavBook,
-                favorite_note: nextFavNote,
-                passphrase: nextPassphrase,
-              })
-              .eq("id", existing.id);
-          }
+// P2/P3 削除後: token 経路のみ。常に RPC で UPDATE (idempotent)。
+        const { error: updateError } = await supabase.rpc(
+          "update_profile_as_owner",
+          {
+            p_profile_id: existing.id,
+            p_browser_token: localBrowserToken,
+            p_passphrase: null,
+            p_new_name: profile.name,
+            p_new_color: nextColor,
+            p_new_favorite_book_id: nextFavBook,
+            p_new_favorite_note: nextFavNote,
+            p_new_passphrase: nextPassphrase ?? "",
+          },
+        );
+        if (updateError) {
+          console.error("update_profile_as_owner failed:", updateError);
         }
         return;
       }
