@@ -151,7 +151,7 @@ export default function Page() {
       return;
     }
     (async () => {
-      c// Step 2: 高速パス — browser_token から自分の profile を引く。
+      // Step 2: 高速パス — browser_token から自分の profile を引く。
       // 成功すれば後段に流す。null / 未登録なら従来の name lookup に fallback。
       let existing: ProfileRecord | undefined;
 
