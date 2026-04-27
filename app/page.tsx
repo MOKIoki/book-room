@@ -198,21 +198,50 @@ export default function Page() {
         const nextFavBook = profile.favoriteBookId ?? null;
         const nextFavNote = profile.favoriteNote ?? null;
         const nextPassphrase = profile.passphrase ?? null;
-        if (
+if (
           existing.color !== nextColor ||
           existing.favorite_book_id !== nextFavBook ||
           existing.favorite_note !== nextFavNote ||
           existing.passphrase !== nextPassphrase
         ) {
-          await supabase
-            .from("profiles")
-            .update({
-              color: nextColor,
-              favorite_book_id: nextFavBook,
-              favorite_note: nextFavNote,
-              passphrase: nextPassphrase,
-            })
-            .eq("id", existing.id);
+          // Step 4: browser_token が DB と一致する (= 自分の profile が確定) 場合は
+          // update_profile_as_owner RPC 経由。一致しない (= legacy 名前 match) は
+          // 旧 direct UPDATE を残す。後者は claim_legacy_profile 配線で解消予定。
+          const isTokenMatched =
+            !!localBrowserToken &&
+            (existing as { browser_token?: string | null }).browser_token === localBrowserToken;
+
+          if (isTokenMatched) {
+            const { error: updateError } = await supabase.rpc(
+              "update_profile_as_owner",
+              {
+                p_profile_id: existing.id,
+                p_browser_token: localBrowserToken,
+                p_passphrase: null,                       // auth は browser_token で
+                p_new_name: profile.name,
+                p_new_color: nextColor,
+                p_new_favorite_book_id: nextFavBook,
+                p_new_favorite_note: nextFavNote,
+                // null = 変更しない / '' = クリア / 文字列 = 設定。
+                // dialog は「未入力なら null」で送ってくるので、ここは
+                // 「null なら '' (= クリア意図)」、文字列ならそのまま。
+                p_new_passphrase: nextPassphrase ?? "",
+              },
+            );
+            if (updateError) {
+              console.error("update_profile_as_owner failed:", updateError);
+            }
+          } else {
+            await supabase
+              .from("profiles")
+              .update({
+                color: nextColor,
+                favorite_book_id: nextFavBook,
+                favorite_note: nextFavNote,
+                passphrase: nextPassphrase,
+              })
+              .eq("id", existing.id);
+          }
         }
         return;
       }
@@ -243,17 +272,30 @@ export default function Page() {
       setMyProfileId(createdId);
 
       // favorite_* を後付けで反映 (Step 4 で RPC 化予定)。
-      const hasFavorites =
+const hasFavorites =
         (profile.favoriteBookId ?? null) !== null ||
         (profile.favoriteNote ?? null) !== null;
       if (hasFavorites) {
-        await supabase
-          .from("profiles")
-          .update({
-            favorite_book_id: profile.favoriteBookId ?? null,
-            favorite_note: profile.favoriteNote ?? null,
-          })
-          .eq("id", createdId);
+        // Step 4: 補助 UPDATE も RPC に統一。
+        // create_profile 直後なので browser_token は確実に DB と一致 → auth OK。
+        // passphrase は create_profile で既に保存済み → p_new_passphrase = null
+        // (= "変更しない")。
+        const { error: updateError } = await supabase.rpc(
+          "update_profile_as_owner",
+          {
+            p_profile_id: createdId,
+            p_browser_token: localBrowserToken,
+            p_passphrase: null,
+            p_new_name: profile.name,
+            p_new_color: profile.color,
+            p_new_favorite_book_id: profile.favoriteBookId ?? null,
+            p_new_favorite_note: profile.favoriteNote ?? null,
+            p_new_passphrase: null,
+          },
+        );
+        if (updateError) {
+          console.error("update_profile_as_owner (post-create) failed:", updateError);
+        }
       }
     })();
   }, [
