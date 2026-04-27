@@ -65,6 +65,7 @@ export default function Page() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [myProfileId, setMyProfileId] = useState<number | null>(null);
+  const [localBrowserToken, setLocalBrowserToken] = useState<string | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [pendingEntry, setPendingEntry] = useState<
     { bookId: string; roomId: number } | null
@@ -105,6 +106,18 @@ export default function Page() {
       } catch {
         setProfile(null);
       }
+      // browser_token: localStorage になければ生成、あればそのまま使う。
+    // 11_policies 適用後の RPC 認証で使う想定。
+    // 現時点では state に保持するだけで、既存のプロフィール作成・更新には
+    // 接続しない (= 副作用なし)。
+    const savedToken = window.localStorage.getItem("book-room-browser-token");
+    if (savedToken) {
+      setLocalBrowserToken(savedToken);
+    } else {
+      const newToken = crypto.randomUUID();
+      window.localStorage.setItem("book-room-browser-token", newToken);
+      setLocalBrowserToken(newToken);
+    }
     }
 
     const savedSeen = window.localStorage.getItem("book-room-last-seen");
