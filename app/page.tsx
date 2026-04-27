@@ -610,79 +610,40 @@ const hasFavorites =
       return;
     }
 
-    const baseId = slugifyTitle(payload.title);
-    const nextId = baseId || `book-${Date.now()}`;
-
-    if (books.some((b) => b.id === nextId)) {
-      alert(
-        "同じIDになりそうな本がすでにあります。タイトルを少し変えて追加してください。",
-      );
+// B1: books + welcome 部屋 + 最初のメッセージを 1 RPC で atomic 作成。
+    //   旧: client が slug から id 計算 + 3 INSERT (途中失敗のリスクあり)
+    //   新: 05 RPC が books.id を gen_random_uuid()::text で生成 + 1 トランザクションで 3 件作成
+    //       → URL の book id は uuid 形式に変わる (= UX 変更)。
+    //       → slugifyTitle / nextId / 重複 check は不要 (uuid 衝突は事実上 0)。
+    if (myProfileId === null || !localBrowserToken) {
+      alert("プロフィールが未設定です。");
       return;
     }
 
-    // 1. 本を追加 (追加者の名前もここで保存する)
-    const { error: bookError } = await supabase.from("books").insert({
-      id: nextId,
-      title: payload.title,
-      author: payload.author || null,
-      description: null,
-      created_by_name: profile.name,
-    });
-    if (bookError) {
-      console.error(bookError);
+    const { data: created, error: createError } = await supabase
+      .rpc("create_book_with_initial_room", {
+        p_profile_id: myProfileId,
+        p_browser_token: localBrowserToken,
+        p_passphrase: profile?.passphrase ?? null,
+        p_title: payload.title,
+        p_author: payload.author || null,
+        p_first_message_body: payload.firstMessage || null,
+      })
+      .single();
+
+    if (createError || !created) {
+      console.error(createError);
       alert("本の追加に失敗しました");
       return;
     }
 
-    // 2. 最初の部屋を自動作成 (ふらっと歓迎 / 読了者向け / 7 日)
-    const DEFAULT_DURATION_HOURS = 168;
-    const expiresAt = new Date(
-      Date.now() + DEFAULT_DURATION_HOURS * 60 * 60 * 1000,
-    ).toISOString();
-
-    const { data: insertedRoom, error: roomError } = await supabase
-      .from("rooms")
-      .insert({
-        book_id: nextId,
-        title: "最初のことば",
-        entry_type: "welcome",
-        spoiler: "read",
-        active_users: 1,
-        expires_at: expiresAt,
-        scheduled_start_at: null,
-        created_by_profile_id: myProfileId,
-      })
-      .select()
-      .single();
-
-    if (roomError || !insertedRoom) {
-      console.error(roomError);
-      alert(
-        "本は追加できましたが、部屋の自動作成に失敗しました。本のページから部屋を作ってください。",
-      );
-      setAddBookOpen(false);
-      await loadAll({ silent: true });
-      setPage({ type: "book", bookId: nextId });
-      return;
-    }
-
-    // 3. 最初の投稿を入れる
-    const sender = profile?.name ?? "you";
-    const senderColor = profile?.color ?? "slate";
-    const { error: messageError } = await supabase.from("messages").insert({
-      room_id: insertedRoom.id,
-      user_name: sender,
-      user_color: senderColor,
-      text: payload.firstMessage,
-    });
-    if (messageError) {
-      console.error(messageError);
-      // 投稿に失敗しても本と部屋はできているので、部屋に連れていって続行。
-    }
-
     setAddBookOpen(false);
     await loadAll({ silent: true });
-    setPage({ type: "room", bookId: nextId, roomId: insertedRoom.id });
+    setPage({
+      type: "room",
+      bookId: created.book_id,
+      roomId: created.room_id,
+    });
   };
 
 const createRoom = async (payload: {
