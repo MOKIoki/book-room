@@ -153,7 +153,7 @@ type RoomPageProps = {
   onDeleteRoom: () => Promise<void>;
   onReserve: () => Promise<void>;
   onCancelReservation: () => Promise<void>;
-  onExtend: (hours: number) => Promise<void>;
+  onExtend: () => Promise<void>;
   onLeaveTrace: (body: string) => Promise<void>;
 };
 
@@ -320,9 +320,10 @@ export default function RoomPage({
                 <button
                   type="button"
                   className="text-xs text-neutral-500 underline"
-                  onClick={() => onExtend(1)}
+                  onClick={() => onExtend()}
+                  title="この部屋の投稿受付を、いまから30日後まで延長します"
                 >
-                  1時間延長
+                  30日延長
                 </button>
               )}
             </div>
