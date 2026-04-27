@@ -784,11 +784,6 @@ const hasFavorites =
       alert("投稿に失敗しました");
       return;
     }
-
-    await supabase
-      .from("rooms")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", currentRoom.id);
   };
 
   // 作成者本人のみ削除可能。RPC 経由で DB 側が二重チェックする。
