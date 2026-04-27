@@ -55,7 +55,6 @@ export default function NameSetupDialog({
     initialFavoriteNote ?? "",
   );
   const [passphrase, setPassphrase] = useState<string>(initialPassphrase ?? "");
-  const [passphrase, setPassphrase] = useState<string>(initialPassphrase ?? "");
   const [mode, setMode] = useState<"create" | "claim">("create");  // X1: モード切替
   useEffect(() => {
     setName(initialName);
