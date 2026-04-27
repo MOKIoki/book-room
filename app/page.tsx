@@ -353,7 +353,7 @@ const hasFavorites =
         .from("book_traces")
         .select("*")
         .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("*"),
+      supabase.from("profiles_public").select("*"),
     ]);
 
     // books と rooms はコア。どちらか落ちたら中断。
