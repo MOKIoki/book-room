@@ -165,13 +165,7 @@ export default function Page() {
             passphrase: string | null;
           }
         | undefined;
-      let existing: {
-        id: number;
-        color: string;
-        favorite_book_id: string | null;
-        favorite_note: string | null;
-        passphrase: string | null;
-      } | undefined;
+      
       let foundViaToken = false; // P1: get_my_profile で見つかったか
 
 // P1: get_my_profile (id + 公開列 5 個) を 1 RPC 呼び出しに統一。
