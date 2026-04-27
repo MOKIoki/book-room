@@ -789,7 +789,7 @@ const hasFavorites =
   // 作成者本人のみ削除可能。RPC 経由で DB 側が二重チェックする。
   // β方針: 合言葉はローカルプロフィールから自動で渡す(UI 入力なし)。
   const deleteRoom = async (roomId: number) => {
-    if (myProfileId === null) {
+   if (myProfileId === null || !localBrowserToken) {
       alert("プロフィールが未設定です。");
       return;
     }
@@ -797,6 +797,7 @@ const hasFavorites =
     const { error } = await supabase.rpc("delete_room_as_creator", {
       p_room_id: roomId,
       p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
       p_passphrase: profile?.passphrase ?? null,
     });
 
