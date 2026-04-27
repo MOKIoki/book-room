@@ -151,18 +151,36 @@ export default function Page() {
       return;
     }
     (async () => {
-      const { data: matches, error: selectError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("name", profile.name)
-        .order("id", { ascending: true });
+      c// Step 2: 高速パス — browser_token から自分の profile を引く。
+      // 成功すれば後段に流す。null / 未登録なら従来の name lookup に fallback。
+      let existing: ProfileRecord | undefined;
 
-      if (selectError) {
-        console.error("profile lookup failed:", selectError);
-        return;
+      if (localBrowserToken) {
+        const { data: idByToken } = await supabase
+          .rpc("get_my_profile_id", { p_browser_token: localBrowserToken });
+        if (idByToken !== null && idByToken !== undefined) {
+          const { data: row } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", idByToken as number)
+            .maybeSingle();
+          if (row) existing = row as ProfileRecord;
+        }
       }
 
-      const existing = matches?.[0];
+      if (!existing) {
+        const { data: matches, error: selectError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("name", profile.name)
+          .order("id", { ascending: true });
+
+        if (selectError) {
+          console.error("profile lookup failed:", selectError);
+          return;
+        }
+        existing = matches?.[0];
+      }
       if (existing) {
         setMyProfileId(existing.id);
         const nextColor = profile.color;
@@ -212,6 +230,7 @@ export default function Page() {
     profile?.favoriteBookId,
     profile?.favoriteNote,
     profile?.passphrase,
+    localBrowserToken,
   ]);
 
   const saveProfile = (nextProfile: UserProfile) => {
