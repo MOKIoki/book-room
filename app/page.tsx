@@ -816,15 +816,20 @@ const createRoom = async (payload: {
     }
   };
 
-  const reserve = async () => {
+const reserve = async () => {
     if (!currentRoom || !myProfileId) {
       alert("予約には名前の設定が必要です");
       return;
     }
-    const { error } = await supabase.from("reservations").insert({
-      room_id: currentRoom.id,
-      profile_id: myProfileId,
-      profile_name: profile?.name ?? null,
+    if (!localBrowserToken) {
+      alert("プロフィールが未設定です。");
+      return;
+    }
+    const { error } = await supabase.rpc("create_reservation_as_owner", {
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: profile?.passphrase ?? null,
+      p_room_id: currentRoom.id,
     });
     if (error) {
       console.error(error);
@@ -832,13 +837,18 @@ const createRoom = async (payload: {
     }
   };
 
-  const cancelReservation = async () => {
+const cancelReservation = async () => {
     if (!currentRoom || !myProfileId) return;
-    const { error } = await supabase
-      .from("reservations")
-      .delete()
-      .eq("room_id", currentRoom.id)
-      .eq("profile_id", myProfileId);
+    if (!localBrowserToken) {
+      alert("プロフィールが未設定です。");
+      return;
+    }
+    const { error } = await supabase.rpc("cancel_reservation_as_owner", {
+      p_room_id: currentRoom.id,
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: profile?.passphrase ?? null,
+    });
     if (error) {
       console.error(error);
       alert(`キャンセルできませんでした: ${error.message}`);
