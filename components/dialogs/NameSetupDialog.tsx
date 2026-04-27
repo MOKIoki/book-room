@@ -126,79 +126,80 @@ export default function NameSetupDialog({
               className="rounded-2xl"
             />
           </div>
-            {mode === "create" && (
-             <>
-          <div className="space-y-2">
-            <Label>発言の色</Label>
-           <div className="grid w-full grid-cols-2 gap-4">
-              {colorOptions.map((option) => {
-                const selected = color === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setColor(option.value)}
-                    className={`w-full overflow-hidden rounded-2xl border p-2 sm:p-3 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+           {/* X1: create モードのみ表示 (claim 時は既存値を保持して非表示) */}
+          {mode === "create" && (
+            <>
+              <div className="space-y-2">
+                <Label>発言の色</Label>
+                <div className="grid w-full grid-cols-2 gap-4">
+                  {colorOptions.map((option) => {
+                    const selected = color === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setColor(option.value)}
+                        className={`w-full overflow-hidden rounded-2xl border p-2 sm:p-3 text-left ${selected ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
+                          <span className="min-w-0 truncate text-[15px] font-medium">{option.label}</span>
+                        </div>
+                        <div className={`mt-2.5 block min-w-0 truncate rounded-xl px-3 py-1.5 text-sm ${option.bubble}`}>サンプル投稿</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>お気に入りの本(任意)</Label>
+                <div className="flex gap-2">
+                  <select
+                    value={favoriteBookId}
+                    onChange={(e) => setFavoriteBookId(e.target.value)}
+                    className="h-10 min-w-0 flex-1 rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
                   >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                     <span className={`h-3 w-3 shrink-0 rounded-full ${option.chip}`} />
-                     <span className="min-w-0 truncate text-[15px] font-medium">{option.label}</span>
-                    </div>
-                    <div className={`mt-2.5 block min-w-0 truncate rounded-xl px-3 py-1.5 text-sm ${option.bubble}`}>サンプル投稿</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                    <option value="">選択しない</option>
+                    {sortedBooks.map((book) => (
+                      <option key={book.id} value={book.id}>
+                        {book.title}
+                        {book.author ? ` / ${book.author}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {onRequestAddBook && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 rounded-2xl"
+                      onClick={onRequestAddBook}
+                      aria-label="本を追加"
+                      title="本を追加"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-neutral-500">
+                  プロフィール欄に「お気に入りの1冊」として表示されます。
+                </p>
+              </div>
 
-          <div className="space-y-2">
-            <Label>お気に入りの本(任意)</Label>
-            <div className="flex gap-2">
-              <select
-                value={favoriteBookId}
-                onChange={(e) => setFavoriteBookId(e.target.value)}
-                className="h-10 min-w-0 flex-1 rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
-              >
-                <option value="">選択しない</option>
-                {sortedBooks.map((book) => (
-                  <option key={book.id} value={book.id}>
-                    {book.title}
-                    {book.author ? ` / ${book.author}` : ""}
-                  </option>
-                ))}
-              </select>
-              {onRequestAddBook && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0 rounded-2xl"
-                  onClick={onRequestAddBook}
-                  aria-label="本を追加"
-                  title="本を追加"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+              {favoriteBookId && (
+                <div className="space-y-2">
+                  <Label>一言(任意)</Label>
+                  <Textarea
+                    value={favoriteNote}
+                    onChange={(e) => setFavoriteNote(e.target.value)}
+                    placeholder="例: 何度読んでも新しい発見がある。"
+                    className="min-h-[100px] rounded-2xl"
+                  />
+                </div>
               )}
-            </div>
-            <p className="text-xs text-neutral-500">
-              プロフィール欄に「お気に入りの1冊」として表示されます。
-            </p>
-          </div>
-
-          {favoriteBookId && (
-            <div className="space-y-2">
-              <Label>一言(任意)</Label>
-              <Textarea
-                value={favoriteNote}
-                onChange={(e) => setFavoriteNote(e.target.value)}
-                placeholder="例: 何度読んでも新しい発見がある。"
-                className="min-h-[100px] rounded-2xl"
-              />
-            </div>
-          </>
+            </>
           )}
-
           <div className="space-y-2">
             <Label>合言葉(任意)</Label>
             <Input
