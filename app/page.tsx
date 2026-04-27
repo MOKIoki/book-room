@@ -631,18 +631,25 @@ const hasFavorites =
       })
       .single();
 
-    if (createError || !created) {
+if (createError || !created) {
       console.error(createError);
       alert("本の追加に失敗しました");
       return;
     }
 
+    // .rpc() の返り値型は {} に推論されるため、05 RPC の TABLE shape にキャスト。
+    const result = created as {
+      book_id: string;
+      room_id: number;
+      message_id: number | null;
+    };
+
     setAddBookOpen(false);
     await loadAll({ silent: true });
     setPage({
       type: "room",
-      bookId: created.book_id,
-      roomId: created.room_id,
+      bookId: result.book_id,
+      roomId: result.room_id,
     });
   };
 
