@@ -572,19 +572,28 @@ const hasFavorites =
 
   // お問い合わせ送信。成功したらダイアログがサンキュー表示に切り替わる。
   const submitContact = async (body: string) => {
-    const { error } = await supabase.from("contacts").insert({
-      body,
-      from_name: profile?.name ?? null,
+// C1: contacts 直接 INSERT を send_contact_as_anon RPC に置換。
+    // 認証不要 RPC (anon でも呼べる)。空文字 / 5000 字超 / 100 字超 を弾く。
+    const { error } = await supabase.rpc("send_contact_as_anon", {
+      p_body: body,
+      p_from_name: profile?.name ?? null,
     });
     if (error) {
       console.error("contacts:", error);
-      alert(
-        "送信に失敗しました。テーブル未作成かもしれません。お手数ですが別の方法で教えてください。",
-      );
-      return false;
+      const msg = error.message ?? "";
+      if (msg.includes("body_required")) {
+        alert("本文を入力してください。");
+      } else if (msg.includes("body_too_long")) {
+        alert("本文が長すぎます (5000 字以内)。");
+      } else if (msg.includes("from_name_too_long")) {
+        alert("お名前が長すぎます (100 字以内)。");
+      } else {
+        alert(
+          "送信に失敗しました。お手数ですが別の方法で教えてください。",
+        );
+      }
+      return;
     }
-    return true;
-  };
 
   const handleEnterRoom = (bookId: string, roomId: number) => {
     if (!profile) {
