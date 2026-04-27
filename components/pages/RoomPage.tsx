@@ -316,14 +316,14 @@ export default function RoomPage({
               </span>
               <span>{formatRelativeTime(room.updated_at)}</span>
               <span>{formatExpiresAt(room.expires_at)}</span>
-              {!isBeforeStart && room.expires_at && (
+                {!isBeforeStart && room.expires_at && (
                 <button
                   type="button"
                   className="text-xs text-neutral-500 underline"
                   onClick={() => onExtend()}
-                  title="この部屋の投稿受付を、いまから30日後まで延長します"
+                  title="この部屋の投稿受付期限を、いまから30日後にリセットします"
                 >
-                  30日延長
+                  30日後まで開く
                 </button>
               )}
             </div>
