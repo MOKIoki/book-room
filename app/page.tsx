@@ -340,7 +340,79 @@ const hasFavorites =
     }
     setProfileDialogOpen(false);
   };
+  // X1: 既存 profile を name + passphrase で引き継ぐ
+  const handleClaim = async (name: string, passphrase: string) => {
+    if (!localBrowserToken) {
+      alert("ブラウザの認証 token が未設定です。");
+      return;
+    }
 
+    const { data: claimedId, error: claimError } = await supabase.rpc(
+      "claim_legacy_profile_by_name",
+      {
+        p_name: name,
+        p_passphrase: passphrase,
+        p_new_token: localBrowserToken,
+      },
+    );
+
+    if (claimError) {
+      const msg = claimError.message ?? "";
+      if (msg.includes("profile_not_found") || msg.includes("name_mismatch")) {
+        alert("その名前のプロフィールは見つかりません");
+      } else if (msg.includes("invalid_passphrase")) {
+        alert("合言葉が一致しません");
+      } else if (msg.includes("profile_already_claimed")) {
+        alert("このプロフィールは既に他のブラウザで引き継ぎ済みです");
+      } else if (msg.includes("browser_already_has_profile")) {
+        alert(
+          "このブラウザは既に別のプロフィールを持っています。一度プロフィールをクリアしてからお試しください",
+        );
+      } else if (msg.includes("multiple_legacy_profiles_found")) {
+        alert("同名のプロフィールが複数あります。お問い合わせください");
+      } else {
+        alert(`引き継ぎに失敗しました: ${msg}`);
+      }
+      return;
+    }
+
+    if (typeof claimedId !== "number") return;
+
+    // claim 成功 → get_my_profile で公開列を取得して localStorage / state に反映
+    const { data: rows } = await supabase.rpc("get_my_profile", {
+      p_browser_token: localBrowserToken,
+    });
+    const row = (
+      rows as Array<{
+        id: number;
+        name: string;
+        color: string;
+        favorite_book_id: string | null;
+        favorite_note: string | null;
+      }> | null
+    )?.[0];
+
+    if (!row) {
+      alert(
+        "引き継ぎは成功しましたが、プロフィール取得に失敗しました。リロードしてください。",
+      );
+      return;
+    }
+
+    const claimedProfile: UserProfile = {
+      name: row.name,
+      color: row.color,
+      favoriteBookId: row.favorite_book_id,
+      favoriteNote: row.favorite_note,
+      passphrase: passphrase || null,
+    };
+
+    setMyProfileId(row.id);
+    setProfile(claimedProfile);
+    localStorage.setItem("book-room-profile", JSON.stringify(claimedProfile));
+    setProfileDialogOpen(false);
+  };
+  
   // 「本を追加」ボタンからのエントリポイント。
   // プロフィール未設定のときは、先にプロフィール設定へ回して、
   // 保存が終わったら自動で AddBookDialog を開き直す。
@@ -1053,6 +1125,7 @@ const leaveTrace = async (body: string) => {
         initialFavoriteBookId={profile?.favoriteBookId ?? null}
         initialFavoriteNote={profile?.favoriteNote ?? null}
         initialPassphrase={profile?.passphrase ?? null}
+        onClaim={handleClaim}
         books={books}
         onSave={saveProfile}
         onClose={() => {
