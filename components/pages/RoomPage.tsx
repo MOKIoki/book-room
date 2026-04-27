@@ -35,8 +35,10 @@ const entryMap = {
   welcome: { label: "ふらっと歓迎", icon: DoorOpen },
   deep: { label: "じっくり対話", icon: MessageSquare },
   small: { label: "少人数向け", icon: Lock },
-  open: { label: "ふらっと歓迎", icon: DoorOpen },
-  approval: { label: "少人数向け", icon: Lock },
+  open: { label: "ふらっと歓迎", icon: DoorOpen },         // legacy (= R1 後の新規部屋では使わない)
+  approval: { label: "少人数向け", icon: Lock },           // legacy
+  discussion: { label: "ふらっと歓迎", icon: DoorOpen },   // R1: 'open' の正式名
+  reservation: { label: "少人数向け", icon: Lock },        // R1: 'approval' の正式名
 } as const;
 
 const colorOptions = [
