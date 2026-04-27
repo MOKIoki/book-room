@@ -592,8 +592,10 @@ const hasFavorites =
           "送信に失敗しました。お手数ですが別の方法で教えてください。",
         );
       }
-      return;
+      return false;
     }
+    return true;
+  };
 
   const handleEnterRoom = (bookId: string, roomId: number) => {
     if (!profile) {
