@@ -217,23 +217,44 @@ export default function Page() {
         return;
       }
 
-      const { data: inserted, error: insertError } = await supabase
-        .from("profiles")
-        .insert({
-          name: profile.name,
-          color: profile.color,
-          favorite_book_id: profile.favoriteBookId ?? null,
-          favorite_note: profile.favoriteNote ?? null,
-          passphrase: profile.passphrase ?? null,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error("profile insert failed:", insertError);
+// Step 3: 直接 INSERT を create_profile RPC に置換。
+      // create_profile は (name, color, browser_token, passphrase) を受け取り、
+      // 新しい profile.id (bigint) を返す。
+      // favorite_book_id / favorite_note は RPC 引数に無いため、
+      // 必要なら直後に補助 UPDATE で書く (Step 4 で update_profile_as_owner に置換予定)。
+      if (!localBrowserToken) {
+        // browser_token がまだ準備できていない → useEffect 再実行を待つ
         return;
       }
-      if (inserted) setMyProfileId(inserted.id);
+      const { data: createdId, error: createError } = await supabase
+        .rpc("create_profile", {
+          p_name: profile.name,
+          p_color: profile.color,
+          p_browser_token: localBrowserToken,
+          p_passphrase: profile.passphrase ?? null,
+        });
+
+      if (createError) {
+        console.error("create_profile failed:", createError);
+        return;
+      }
+      if (typeof createdId !== "number") return;
+
+      setMyProfileId(createdId);
+
+      // favorite_* を後付けで反映 (Step 4 で RPC 化予定)。
+      const hasFavorites =
+        (profile.favoriteBookId ?? null) !== null ||
+        (profile.favoriteNote ?? null) !== null;
+      if (hasFavorites) {
+        await supabase
+          .from("profiles")
+          .update({
+            favorite_book_id: profile.favoriteBookId ?? null,
+            favorite_note: profile.favoriteNote ?? null,
+          })
+          .eq("id", createdId);
+      }
     })();
   }, [
     profile?.name,
