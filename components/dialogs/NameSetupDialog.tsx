@@ -27,6 +27,7 @@ type NameSetupDialogProps = {
   initialPassphrase?: string | null;
   books: Book[];
   onSave: (profile: UserProfile) => void;
+  onClaim?: (name: string, passphrase: string) => Promise<void>;  // X1: 既存 profile を claim
   onClose?: () => void;
   onRequestAddBook?: () => void;
 };
@@ -40,11 +41,13 @@ export default function NameSetupDialog({
   initialPassphrase,
   books,
   onSave,
+  onClaim,
   onClose,
   onRequestAddBook,
 }: NameSetupDialogProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
+  
   const [favoriteBookId, setFavoriteBookId] = useState<string>(
     initialFavoriteBookId ?? "",
   );
@@ -52,7 +55,8 @@ export default function NameSetupDialog({
     initialFavoriteNote ?? "",
   );
   const [passphrase, setPassphrase] = useState<string>(initialPassphrase ?? "");
-
+  const [passphrase, setPassphrase] = useState<string>(initialPassphrase ?? "");
+  const [mode, setMode] = useState<"create" | "claim">("create");  // X1: モード切替
   useEffect(() => {
     setName(initialName);
     setColor(initialColor);
@@ -85,17 +89,45 @@ export default function NameSetupDialog({
            <DialogTitle>名前を設定</DialogTitle>
           </DialogHeader>
 
-        <div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
+            <div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
+          {/* X1: モード切替トグル (onClaim が渡されている場合のみ表示) */}
+          {onClaim && (
+            <div className="flex gap-2 rounded-2xl bg-neutral-100 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("create")}
+                className={`flex-1 rounded-xl px-3 py-2 text-sm ${
+                  mode === "create"
+                    ? "bg-white shadow font-medium"
+                    : "text-neutral-500"
+                }`}
+              >
+                新しく作る
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("claim")}
+                className={`flex-1 rounded-xl px-3 py-2 text-sm ${
+                  mode === "claim"
+                    ? "bg-white shadow font-medium"
+                    : "text-neutral-500"
+                }`}
+              >
+                既存を引き継ぐ
+              </button>
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label>表示名</Label>
-            <Input
+             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例: hiro / 読書猫 / N"
               className="rounded-2xl"
             />
           </div>
-
+            {mode === "create" && (
+             <>
           <div className="space-y-2">
             <Label>発言の色</Label>
            <div className="grid w-full grid-cols-2 gap-4">
@@ -164,6 +196,7 @@ export default function NameSetupDialog({
                 className="min-h-[100px] rounded-2xl"
               />
             </div>
+          </>
           )}
 
           <div className="space-y-2">
@@ -188,9 +221,14 @@ export default function NameSetupDialog({
           )}
           <Button
             className="rounded-2xl w-full sm:w-auto"
-            onClick={() => {
+            onClick={async () => {
               if (!name.trim()) {
                 alert("表示名を入力してください");
+                return;
+              }
+              if (mode === "claim" && onClaim) {
+                // X1: 既存 profile を claim
+                await onClaim(name.trim(), passphrase.trim());
                 return;
               }
               onSave({
@@ -202,7 +240,7 @@ export default function NameSetupDialog({
               });
             }}
           >
-            保存する
+            {mode === "claim" ? "引き継ぐ" : "保存する"}
           </Button>
         </DialogFooter>
       </DialogContent>
