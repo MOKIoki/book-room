@@ -667,12 +667,17 @@ const createRoom = async (payload: {
       return;
     }
 
-    // R1: 旧 vocab → 新 vocab マッピング (dialog 改修は X2 で別途)。
-    //   open     → discussion (= 議論部屋)
-    //   approval → reservation (= 予約読書会)
-    const newEntryType =
-      payload.entryType === "approval" ? "reservation" : "discussion";
-
+   // R1 fix: 新 vocab 3 値 (welcome/discussion/reservation) では
+    // 「予約読書会か否か」は scheduled_start_at の有無で判定する。
+    //   scheduledStartAt あり → reservation (= 予約読書会)
+    //   scheduledStartAt なし → discussion (= 議論部屋)
+    // dialog 側の "飛び込みOK"/"承認制" (open/approval) の区別は
+    // 新 vocab には存在しない (= 'approval' は実データ 0 件、UI 上の参加方式は
+    // welcome 以外では区別なくなる)。
+    // この区別を残したい場合は X2 (UI vocab 統一) で再設計する。
+    const newEntryType: "discussion" | "reservation" = payload.scheduledStartAt
+      ? "reservation"
+      : "discussion";
     // 06 RPC は p_writable_days integer (1〜30) を要求する。
     // 旧 durationHours から日数に変換 (切り上げ + clamp)。
     // 注意: 予約読書会では「開始時刻基準」→「now() 基準」に意味が変わる。
