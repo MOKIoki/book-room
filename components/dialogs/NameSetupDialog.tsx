@@ -126,8 +126,12 @@ export default function NameSetupDialog({
             />
           </div>
            {/* X1: create モードのみ表示 (claim 時は既存値を保持して非表示) */}
-          {mode === "create" && (
+        {mode === "create" && (
             <>
+              {/* X1 補助: 新規作成事故防止のヒント */}
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                以前にこの名前でアクセスしたことがある場合は、上の「既存を引き継ぐ」を選んでください。新しく作ると別プロフィール扱いになります。
+              </div>
               <div className="space-y-2">
                 <Label>発言の色</Label>
                 <div className="grid w-full grid-cols-2 gap-4">
