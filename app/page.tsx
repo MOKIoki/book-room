@@ -947,10 +947,12 @@ const leaveTrace = async (body: string) => {
         />
       )}
 
+{/* 閉室後: 作成者は RoomPage (= 置き手紙導線あり)、それ以外は ExpiredRoomPage */}
       {page.type === "room" &&
         currentBook &&
         currentRoom &&
-        currentRoomExpired && (
+        currentRoomExpired &&
+        currentRoom.created_by_profile_id !== myProfileId && (
           <ExpiredRoomPage
             onBack={() => setPage({ type: "book", bookId: currentBook.id })}
           />
@@ -959,7 +961,8 @@ const leaveTrace = async (body: string) => {
       {page.type === "room" &&
         currentBook &&
         currentRoom &&
-        !currentRoomExpired && (
+        (!currentRoomExpired ||
+          currentRoom.created_by_profile_id === myProfileId) && (
           <RoomPage
             book={currentBook}
             room={currentRoom}
