@@ -763,11 +763,20 @@ const hasFavorites =
     const sender = profile?.name ?? "you";
     const senderColor = profile?.color ?? "slate";
 
-    const { error } = await supabase.from("messages").insert({
-      room_id: currentRoom.id,
-      user_name: sender,
-      user_color: senderColor,
-      text,
+// A1: messages 直接 INSERT を send_message_as_owner RPC に置換。
+    // user_name / user_color はクライアントから渡さず、サーバ側 (07 RPC) で
+    // profiles から snapshot 取得する (= なりすまし防止)。
+    if (myProfileId === null || !localBrowserToken) {
+      alert("プロフィールが未設定です");
+      return;
+    }
+
+    const { error } = await supabase.rpc("send_message_as_owner", {
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: profile?.passphrase ?? null,
+      p_room_id: currentRoom.id,
+      p_body: text,
     });
 
     if (error) {
