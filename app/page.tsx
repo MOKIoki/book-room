@@ -153,7 +153,18 @@ export default function Page() {
     (async () => {
       // Step 2: 高速パス — browser_token から自分の profile を引く。
       // 成功すれば後段に流す。null / 未登録なら従来の name lookup に fallback。
-      let existing: ProfileRecord | undefined;
+      // ProfileRecord (= public 列のみ) には passphrase が無いため、
+      // ここでは profiles 全列の inline 型で受ける。下の if 内で
+      // color / favorite_book_id / favorite_note / passphrase / id を参照する。
+      let existing:
+        | {
+            id: number;
+            color: string;
+            favorite_book_id: string | null;
+            favorite_note: string | null;
+            passphrase: string | null;
+          }
+        | undefined;
 
       if (localBrowserToken) {
         const { data: idByToken } = await supabase
@@ -164,7 +175,7 @@ export default function Page() {
             .select("*")
             .eq("id", idByToken as number)
             .maybeSingle();
-          if (row) existing = row as ProfileRecord;
+          if (row) existing = row;
         }
       }
 
