@@ -30,6 +30,8 @@ const entryMap = {
   small: { label: "少人数向け", icon: Lock },
   open: { label: "ふらっと歓迎", icon: DoorOpen },
   approval: { label: "少人数向け", icon: Lock },
+  discussion: { label: "ふらっと歓迎", icon: DoorOpen },   // R1: 'open' の正式名
+  reservation: { label: "少人数向け", icon: Lock },        // R1: 'approval' の正式名
 };
 
 const colorOptions = [
