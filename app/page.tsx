@@ -854,16 +854,21 @@ const hasFavorites =
     }
   };
 
-  const extendRoom = async (hours: number) => {
+// R4: extendRoom を extend_room_as_creator RPC に置換 (= 30 日固定)。
+  // 06 RPC は expires_at = now() + interval '30 days' にリセットする。
+  // クライアントでの時間計算は不要。引数なし。
+  const extendRoom = async () => {
     if (!currentRoom) return;
-    const base = currentRoom.expires_at
-      ? new Date(currentRoom.expires_at).getTime()
-      : Date.now();
-    const next = new Date(base + hours * 60 * 60 * 1000).toISOString();
-    const { error } = await supabase
-      .from("rooms")
-      .update({ expires_at: next })
-      .eq("id", currentRoom.id);
+    if (myProfileId === null || !localBrowserToken) {
+      alert("プロフィールが未設定です。");
+      return;
+    }
+    const { error } = await supabase.rpc("extend_room_as_creator", {
+      p_room_id: currentRoom.id,
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: profile?.passphrase ?? null,
+    });
     if (error) {
       console.error(error);
       alert("延長に失敗しました");
