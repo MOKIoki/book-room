@@ -40,7 +40,7 @@ export default function CreateRoomDialog({
 }: CreateRoomDialogProps) {
   const [title, setTitle] = useState("");
   const [spoiler, setSpoiler] = useState<"none" | "progress" | "read">("none");
-  const [durationHours, setDurationHours] = useState("2");
+  const [durationHours, setDurationHours] = useState("336");
   const [note, setNote] = useState("");
   const [mode, setMode] = useState<"now" | "scheduled">("now");
   const [scheduledAt, setScheduledAt] = useState<string>(defaultScheduledAt);
@@ -156,11 +156,10 @@ export default function CreateRoomDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1時間</SelectItem>
-                <SelectItem value="2">2時間</SelectItem>
-                <SelectItem value="6">6時間</SelectItem>
-                <SelectItem value="24">24時間</SelectItem>
                 <SelectItem value="72">3日</SelectItem>
+                <SelectItem value="168">7日</SelectItem>
+                <SelectItem value="336">14日</SelectItem>
+                <SelectItem value="720">30日</SelectItem>
               </SelectContent>
             </Select>
           </div>
