@@ -569,17 +569,21 @@ export default function TopPage({
         </div>
 <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
   <div className="mb-3 font-medium text-neutral-900">この場所について</div>
-  <div className="space-y-3 leading-7">
+ <div className="max-w-4xl space-y-3 leading-7">
     <p>
       book-room は、本を読み終えたあとに残った感想やモヤモヤを、
       少しだけ置いていける場所です。
     </p>
-    <p>
+     <p>
       レビューを書くほどではないけれど、ひとりで閉じるには惜しい。
+     </p>
+      <p>
       そんな読後の言葉を、本ごとの部屋や置き手紙として残せます。
-    </p>
-    <p>
+      </p>
+      <p>
       運営者自身も、本を読み終えたあとに誰かと少しだけ話したくなることがあり、この場所を作りました。
+       </p>
+       <p>
       投稿内容や不具合の連絡には必要に応じて確認・対応します。
     </p>
   </div>
