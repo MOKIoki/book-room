@@ -283,7 +283,11 @@ export default function TopPage({
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div className="hidden text-sm font-medium tracking-tight text-neutral-700 sm:block">
+    book-room
+  </div>
+  <div className="sm:hidden">
           <div className="sm:hidden">
             <button
               type="button"
