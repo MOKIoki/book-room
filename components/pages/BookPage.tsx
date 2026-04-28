@@ -349,10 +349,10 @@ export default function BookPage({
                 <MessageSquare className="h-5 w-5 text-neutral-500" />
               </div>
               <div className="mb-3 text-sm font-medium">
-                いま話題の部屋はありません
+                この本について、話題を広げる部屋を作ってみませんか
               </div>
               <Button size="sm" className="rounded-2xl" onClick={onCreateRoom}>
-                最初の話題を作る
+                この本で話題を作る
               </Button>
             </div>
           ) : (
