@@ -287,7 +287,6 @@ export default function TopPage({
   <div className="hidden text-sm font-medium tracking-tight text-neutral-700 sm:block">
     book-room
   </div>
-  <div className="sm:hidden">
           <div className="sm:hidden">
             <button
               type="button"
