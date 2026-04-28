@@ -567,19 +567,24 @@ export default function TopPage({
             </div>
           )}
         </div>
-
-        <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
-          <div className="mb-2 font-medium text-neutral-900">最近の更新</div>
-          <div className="space-y-2 leading-6">
-            {updates.map((item, index) => (
-              <div key={`${item.at}-${index}`} className="flex flex-wrap gap-2">
-                <span className="text-xs text-neutral-500">{item.at}</span>
-                <span>{item.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
+<div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
+  <div className="mb-3 font-medium text-neutral-900">この場所について</div>
+  <div className="space-y-3 leading-7">
+    <p>
+      book-room は、本を読み終えたあとに残った感想やモヤモヤを、
+      少しだけ置いていける場所です。
+    </p>
+    <p>
+      レビューを書くほどではないけれど、ひとりで閉じるには惜しい。
+      そんな読後の言葉を、本ごとの部屋や置き手紙として残せます。
+    </p>
+    <p>
+      このサービスは沖縄在住の個人がAIと運営しています。
+      投稿内容や不具合の連絡には必要に応じて確認・対応します。
+    </p>
+  </div>
+</div>
+        
         <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
           <div className="mb-2 font-medium text-neutral-900">この場の約束</div>
           <div className="space-y-1 leading-6">
