@@ -714,7 +714,6 @@ if (createError || !created) {
 
 const createRoom = async (payload: {
     title: string;
-    entryType: "open" | "approval";
     spoiler: "none" | "progress" | "read";
     durationHours: number;
     firstMessage: string;
