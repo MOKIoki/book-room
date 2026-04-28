@@ -362,7 +362,7 @@ export default function TopPage({
             <CardHeader className="relative z-10 p-8">
               <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm text-neutral-600">
                 <BookOpen className="h-4 w-4" />
-                同じ本を読んだ人と、少し話せる「Book-room」。
+                同じ本を読んだ人と、少し話せる「book-room」。
               </div>
 
               <CardTitle className="text-4xl font-semibold tracking-tight sm:text-5xl">
