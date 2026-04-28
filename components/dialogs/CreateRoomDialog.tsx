@@ -13,7 +13,6 @@ type CreateRoomDialogProps = {
   onOpenChange: (open: boolean) => void;
   onCreate: (payload: {
     title: string;
-    entryType: "open" | "approval";
     spoiler: "none" | "progress" | "read";
     durationHours: number;
     firstMessage: string;
@@ -40,7 +39,6 @@ export default function CreateRoomDialog({
   onCreate,
 }: CreateRoomDialogProps) {
   const [title, setTitle] = useState("");
-  const [entryType, setEntryType] = useState<"open" | "approval">("open");
   const [spoiler, setSpoiler] = useState<"none" | "progress" | "read">("none");
   const [durationHours, setDurationHours] = useState("2");
   const [note, setNote] = useState("");
@@ -68,14 +66,12 @@ export default function CreateRoomDialog({
     setSubmitting(true);
     await onCreate({
       title: title.trim(),
-      entryType,
       spoiler,
       durationHours: Number(durationHours),
       firstMessage: note.trim(),
       scheduledStartAt: scheduledISO,
     });
     setTitle("");
-    setEntryType("open");
     setSpoiler("none");
     setDurationHours("2");
     setNote("");
@@ -139,33 +135,18 @@ export default function CreateRoomDialog({
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>参加方式</Label>
-              <Select value={entryType} onValueChange={(v: "open" | "approval") => setEntryType(v)}>
-                <SelectTrigger className="rounded-2xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="open">飛び込みOK</SelectItem>
-                  <SelectItem value="approval">承認制</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>ネタバレ範囲</Label>
-              <Select value={spoiler} onValueChange={(v: "none" | "progress" | "read") => setSpoiler(v)}>
-                <SelectTrigger className="rounded-2xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">未読歓迎</SelectItem>
-                  <SelectItem value="progress">途中まで</SelectItem>
-                  <SelectItem value="read">読了者向け</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>ネタバレ範囲</Label>
+            <Select value={spoiler} onValueChange={(v: "none" | "progress" | "read") => setSpoiler(v)}>
+              <SelectTrigger className="rounded-2xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">未読歓迎</SelectItem>
+                <SelectItem value="progress">途中まで</SelectItem>
+                <SelectItem value="read">読了者向け</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -185,7 +166,7 @@ export default function CreateRoomDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>{mode === "scheduled" ? "予告のひとこと（任意）" : "最初のひとこと"}</Label>
+            <Label>{mode === "scheduled" ? "予告のひとこと(任意)" : "最初のひとこと"}</Label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
