@@ -285,7 +285,6 @@ export default function TopPage({
       <div className="mx-auto max-w-6xl px-4 py-8">
        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
  <div className="hidden sm:block">
-<div className="hidden sm:block">
   <div className="rounded-full border border-neutral-200 bg-white/80 px-3 py-1.5 text-sm font-medium tracking-tight text-neutral-700 shadow-sm">
     book-room
   </div>
