@@ -283,7 +283,7 @@ export default function TopPage({
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-6xl px-4 py-8">
-       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
           <div className="sm:hidden">
             <button
               type="button"
@@ -360,9 +360,6 @@ export default function TopPage({
             />
             <div className="absolute inset-0 bg-white/70" />
             <CardHeader className="relative z-10 p-8">
-              <div className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-neutral-500">
-　　　　　　　　  book-room
-　　　　　　　　　　</div>
               <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm text-neutral-600">
                 <BookOpen className="h-4 w-4" />
                 同じ本を読んだ人と、少し話せる場所。
