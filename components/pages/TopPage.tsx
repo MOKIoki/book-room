@@ -571,7 +571,7 @@ export default function TopPage({
   <div className="mb-3 font-medium text-neutral-900">この場所について</div>
 <div className="max-w-3xl space-y-2 text-sm leading-7 text-neutral-600">
   <p>
-    　book-room は、本を読み終えたあとに残った感想やモヤモヤを、少しだけ置いていける場所です。
+    　book-room は、本を読み終えたあとに残った感想やモヤモヤを、少しだけ置いていける場所です。　　　　　　　
     　ひとりで閉じるには惜しい、あなたの読後の言葉を、本ごとの部屋や置き手紙として残しませんか。
   </p>
   <p>
