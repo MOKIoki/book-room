@@ -568,7 +568,7 @@ export default function TopPage({
           )}
         </div>
 <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
- <div className="mb-3 font-medium text-neutral-900">book-roomについて</div>
+ <div className="mb-3 font-medium text-neutral-900">book-room について</div>
 <div className="max-w-3xl space-y-2 text-sm leading-7 text-neutral-600">
   <p>
      book-room は、本を読み終えたあとに残った感想やモヤモヤを、少しだけ置いていける場所です。　　　　　　　　　
