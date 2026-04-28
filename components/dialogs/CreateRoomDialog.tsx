@@ -106,7 +106,7 @@ export default function CreateRoomDialog({
                 onClick={() => setMode("now")}
                 className={`rounded-2xl border p-3 text-left text-sm ${mode === "now" ? "border-neutral-900 ring-2 ring-neutral-300" : "border-neutral-200"}`}
               >
-                <div className="font-medium">すぐ開ける</div>
+                <div className="font-medium">すぐ開く</div>
                 <div className="text-xs text-neutral-500">作成と同時に参加できます</div>
               </button>
               <button
