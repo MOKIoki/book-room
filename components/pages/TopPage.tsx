@@ -384,8 +384,8 @@ export default function TopPage({
 
           <Card className="rounded-3xl shadow-sm">
             <CardHeader>
-              <CardTitle>ホットな部屋</CardTitle>
-              <CardDescription>いま入って話せる部屋です。</CardDescription>
+              <CardTitle>あかりが灯った部屋</CardTitle>
+              <CardDescription>最近動きのあった部屋です。</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {activeRooms.length === 0 ? (
@@ -416,12 +416,12 @@ export default function TopPage({
           </Card>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-1 sm:grid-cols-2">
+        <div className="mt-6">
           <Card className="rounded-3xl shadow-sm">
             <CardHeader>
               <CardTitle>語らいの置き手紙</CardTitle>
               <CardDescription>
-                語り合いを終えた部屋から残された短いメッセージです。
+                読み終えた人の余韻
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -463,61 +463,16 @@ export default function TopPage({
               )}
             </CardContent>
           </Card>
-
-          <Card className="rounded-3xl shadow-sm">
-            <CardHeader>
-              <CardTitle>ずっと好きな1冊</CardTitle>
-              <CardDescription>
-                ここにいる人が、それぞれ大切にしている1冊です。
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {visibleFavorites.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-neutral-200 px-4 py-6 text-sm text-neutral-500">
-                  まだ登録されていません。
-                </div>
-              ) : (
-                visibleFavorites.map((item) => {
-                  const color = getColorStyle(item.color);
-                  return (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-neutral-200 px-4 py-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className={`h-3 w-3 rounded-full ${color.chip}`} />
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                      <div className="mt-3 text-xl font-semibold">{item.bookTitle}</div>
-                      <div className="text-sm text-neutral-500">{item.bookAuthor}</div>
-                      {item.favoriteNote && (
-                        <div className="mt-3 text-sm leading-6 text-neutral-700">
-                          {item.favoriteNote}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-
-              {favoriteProfiles.length > 2 && (
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => setShowAllFavorites((v) => !v)}
-                >
-                  {showAllFavorites ? "閉じる" : "ほかを見る"}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-3xl font-semibold">本を開く、部屋がひらく。</h2>
-              <p className="mt-1 text-neutral-500">読んだ本について、少し話せる場所です。話題ごとに部屋を作ることもできます。</p>
+              <p className="mt-1 text-neutral-500">読んだ本について、少し話せる場所です。話題ごとに部屋を作ることもできます。
+              <p className="mt-2 text-xs text-neutral-400">
+                登録された本 {books.length}冊
+                            </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -575,6 +530,55 @@ export default function TopPage({
               })}
             </div>
           )}
+        </div>
+        <div className="mt-6">
+          <Card className="rounded-3xl shadow-sm">
+            <CardHeader>
+              <CardTitle>ずっと好きな1冊</CardTitle>
+              <CardDescription>
+                ここにいる人が、それぞれ大切にしている1冊です。
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {visibleFavorites.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-neutral-200 px-4 py-6 text-sm text-neutral-500">
+                  まだ登録されていません。
+                </div>
+              ) : (
+                visibleFavorites.map((item) => {
+                  const color = getColorStyle(item.color);
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-neutral-200 px-4 py-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`h-3 w-3 rounded-full ${color.chip}`} />
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                      <div className="mt-3 text-xl font-semibold">{item.bookTitle}</div>
+                      <div className="text-sm text-neutral-500">{item.bookAuthor}</div>
+                      {item.favoriteNote && (
+                        <div className="mt-3 text-sm leading-6 text-neutral-700">
+                          {item.favoriteNote}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+
+              {favoriteProfiles.length > 2 && (
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setShowAllFavorites((v) => !v)}
+                >
+                  {showAllFavorites ? "閉じる" : "ほかを見る"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </div>
 <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
  <div className="mb-3 font-medium text-neutral-900">book-room について</div>
