@@ -296,11 +296,19 @@ export default function RoomPage({
         <Card className="rounded-3xl border-0 shadow-sm">
           <CardHeader className="border-b border-neutral-100 pb-5">
             <div className="text-sm text-neutral-500">{book.title}</div>
-            <CardTitle className="flex flex-wrap items-center gap-2 text-2xl leading-8">
+          <CardTitle className="flex flex-wrap items-center gap-2 text-2xl leading-8">
               {room.title}
               {isBeforeStart && (
                 <Badge variant="outline" className="border-sky-300 bg-white text-sky-700">
                   予約読書会
+                </Badge>
+              )}
+              {isExpired && (
+                <Badge
+                  variant="outline"
+                  className="border-neutral-400 bg-neutral-100 text-neutral-700"
+                >
+                  終了済み
                 </Badge>
               )}
             </CardTitle>
