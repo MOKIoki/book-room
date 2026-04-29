@@ -520,8 +520,8 @@ export default function RoomPage({
                   </div>
                 ) : (
                   <>
-                    <div className="mb-2 text-sm text-neutral-500">
-                      部屋の終了後に公開され、本のページに短いメッセージとして残ります（30日間・最大4件）。
+                     <div className="mb-2 text-sm text-neutral-500">
+                      部屋の終了後に、本のページへ短い置き手紙として残ります。
                     </div>
                     <Textarea
                       value={traceDraft}
