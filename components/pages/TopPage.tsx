@@ -517,7 +517,7 @@ export default function TopPage({
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-3xl font-semibold">本を開く、部屋がひらく。</h2>
-              <p className="mt-1 text-neutral-500">本について話しましょう。話題ことに部屋を作れます</p>
+              <p className="mt-1 text-neutral-500">本について話しましょう。話題ごとに部屋を作ることもできます。</p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
