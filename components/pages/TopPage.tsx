@@ -470,8 +470,8 @@ export default function TopPage({
             <div>
               <h2 className="text-3xl font-semibold">本を開く、部屋がひらく。</h2>
               <p className="mt-1 text-neutral-500">読んだ本について、少し話せる場所です。話題ごとに部屋を作ることもできます。
-          <p className="mt-2 text-xs text-neutral-400">
-  {`登録された本 ${books.length}冊`}
+<p className="mt-2 text-xs text-neutral-400">
+  登録された本 {books.length}冊
 </p>
             </div>
 
