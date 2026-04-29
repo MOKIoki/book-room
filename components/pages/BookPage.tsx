@@ -167,6 +167,7 @@ export default function BookPage({
 }: BookPageProps) {
   useNow();
   const [closedExpanded, setClosedExpanded] = React.useState(false);
+  const [showAllTraces, setShowAllTraces] = React.useState(false);
 
   // welcome 部屋 (= 上部固定、本ごとに 1 件想定)
   const welcomeRoom = book.rooms.find((r) => r.entry_type === "welcome");
@@ -286,32 +287,47 @@ export default function BookPage({
           </section>
         )}
 
-        {/* 語らいの置き手紙 (= 0 件なら非表示。短冊・引用風) */}
+        {/* 語らいの置き手紙 (= 0 件なら非表示。初期 2 件、3 件以上で「ほかを見る」) */}
         {recentTraces.length > 0 && (
           <section className="mb-8">
             <h2 className="mb-3 text-sm font-medium text-neutral-500">
               語らいの置き手紙
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
-              {recentTraces.map((trace) => (
-                <button
-                  key={trace.id}
-                  type="button"
-                  onClick={() => {
-                    if (trace.room_id) onEnterRoom(trace.room_id);
-                  }}
-                  className="block rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-left transition hover:border-amber-200"
-                >
-                  <div className="text-sm leading-6 text-neutral-800">
-                    「{trace.body}」
-                  </div>
-                  <div className="mt-2 text-xs text-neutral-500">
-                    — {trace.created_by_name ?? "匿名"}
-                    {trace.room_title ? ` ・「${trace.room_title}」より` : ""}
-                  </div>
-                </button>
-              ))}
+              {(showAllTraces ? recentTraces : recentTraces.slice(0, 2)).map(
+                (trace) => (
+                  <button
+                    key={trace.id}
+                    type="button"
+                    onClick={() => {
+                      if (trace.room_id) onEnterRoom(trace.room_id);
+                    }}
+                    className="block rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-left transition hover:border-amber-200"
+                  >
+                    <div className="text-sm leading-6 text-neutral-800">
+                      「{trace.body}」
+                    </div>
+                    <div className="mt-2 text-xs text-neutral-500">
+                      — {trace.created_by_name ?? "匿名"}
+                      {trace.room_title ? ` ・「${trace.room_title}」より` : ""}
+                    </div>
+                  </button>
+                ),
+              )}
             </div>
+            {recentTraces.length > 2 && (
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAllTraces((v) => !v)}
+                  className="text-xs text-neutral-500 underline transition hover:text-neutral-700"
+                >
+                  {showAllTraces
+                    ? "閉じる"
+                    : `ほかを見る (残り ${recentTraces.length - 2} 件)`}
+                </button>
+              </div>
+            )}
           </section>
         )}
 
