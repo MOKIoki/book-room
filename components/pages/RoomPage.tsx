@@ -348,13 +348,13 @@ export default function RoomPage({
                 >
                   30日後まで開く
                 </button>
-                <button
+                <Button
                 type="button"
                 className="text-xs text-neutral-500 underline"
                 onClick={() => setReportOpen(true)}
               >
                 管理人に伝える
-              </button>
+              </Button>
               )}
             </div>
           </CardHeader>
