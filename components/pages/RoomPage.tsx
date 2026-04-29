@@ -426,9 +426,19 @@ export default function RoomPage({
             </div>
 
             <div className="border-t border-neutral-100 p-4">
-              {isBeforeStart ? (
+{isBeforeStart ? (
                 <div className="rounded-2xl bg-neutral-100 px-4 py-3 text-sm text-neutral-600">
                   予約読書会は開始日時まで投稿できません。
+                </div>
+              ) : isExpired ? (
+                /* X9: 終了済み notice (= 投稿フォーム位置) */
+                <div className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-900">
+                  <div className="font-medium">
+                    この部屋は投稿の受付を終了しました
+                  </div>
+                  <div className="mt-1 text-xs text-amber-800/80">
+                    置き手紙を残せます
+                  </div>
                 </div>
               ) : (
                 <>
