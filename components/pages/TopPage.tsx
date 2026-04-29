@@ -150,6 +150,7 @@ type RecentHeat = {
   bookTitle: string;
   body: string;
   roomTitle: string | null;
+  roomId: number | null;
   createdAt: string;
 };
 
@@ -429,17 +430,25 @@ export default function TopPage({
                   まだ置き手紙はありません。
                 </div>
               ) : (
-                visibleHeats.map((heat, index) => (
-                  <div
+                  visibleHeats.map((heat, index) => (
+                  <button
                     key={`${heat.bookId}-${heat.createdAt}-${index}`}
-                    className="rounded-2xl border border-neutral-200 px-4 py-4"
+                    type="button"
+                    onClick={() => {
+                      if (heat.roomId !== null) {
+                        onEnterActiveRoom(heat.bookId, heat.roomId);
+                      } else {
+                        onOpenBook(heat.bookId);
+                      }
+                    }}
+                    className="block w-full rounded-2xl border border-neutral-200 px-4 py-4 text-left transition hover:border-neutral-300 hover:bg-neutral-50"
                   >
                     <div className="text-sm text-neutral-500">{heat.bookTitle}</div>
                     <div className="mt-1 text-base font-medium">{heat.body}</div>
                     <div className="mt-1 text-xs text-neutral-500">
                       元の部屋: {heat.roomTitle ?? "不明"}
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
 
