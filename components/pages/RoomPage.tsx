@@ -358,7 +358,6 @@ export default function RoomPage({
 >
   管理人に伝える
 </Button>
-              )}
             </div>
           </CardHeader>
 
