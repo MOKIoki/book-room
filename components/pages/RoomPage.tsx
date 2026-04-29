@@ -242,6 +242,10 @@ export default function RoomPage({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [room.messages.length]);
+  // X9: 終了済み部屋では置き手紙セクションを自動展開 (= 主導線切替)
+  useEffect(() => {
+    if (isExpired) setTraceOpen(true);
+  }, [isExpired]);
 
   const submit = async () => {
     if (!draft.trim() || sending) return;
@@ -466,7 +470,7 @@ export default function RoomPage({
           </CardContent>
         </Card>
 
-        {!isBeforeStart && (
+{!isBeforeStart && (
           <Card className="mt-6 rounded-3xl border-0 shadow-sm">
             <button
               type="button"
@@ -477,11 +481,13 @@ export default function RoomPage({
               <div>
                 <div className="flex items-center gap-2 text-lg font-semibold">
                   <Eye className="h-4 w-4" />
-                  置き手紙を残す
+                  {existingTrace ? "残された置き手紙" : "置き手紙を残す"}
                 </div>
                 {!traceOpen && (
                   <div className="mt-1 text-sm text-neutral-500">
-                    チャットを振り返りながら書けます。終了後に本のページへ。
+                    {existingTrace
+                      ? "この部屋の余韻として、本のページに残されています。"
+                      : "チャットを振り返りながら書けます。終了後に本のページへ。"}
                   </div>
                 )}
               </div>
@@ -493,24 +499,39 @@ export default function RoomPage({
             </button>
             {traceOpen && (
               <CardContent>
-                <div className="mb-2 text-sm text-neutral-500">
-                  部屋の終了後に公開され、本のページに短いメッセージとして残ります（30日間・最大4件）。
-                </div>
-                <Textarea
-                  value={traceDraft}
-                  onChange={(e) => setTraceDraft(e.target.value)}
-                  placeholder="次に読む人へ、短い一言をどうぞ。"
-                  className="min-h-[88px] rounded-2xl"
-                />
-                <div className="mt-2 flex justify-end">
-                  <Button
-                    className="rounded-2xl"
-                    onClick={submitTrace}
-                    disabled={tracing || !traceDraft.trim()}
-                  >
-                    残す
-                  </Button>
-                </div>
+                {existingTrace ? (
+                  /* X9: 既存 trace 表示 (= 1 部屋 1 trace UNIQUE、再投稿不可) */
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                    <div className="text-sm leading-6 text-neutral-800">
+                      「{existingTrace.body}」
+                    </div>
+                    <div className="mt-2 text-xs text-neutral-500">
+                      — {existingTrace.created_by_name ?? "匿名"} ・{" "}
+                      {formatRelativeTime(existingTrace.created_at)}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-2 text-sm text-neutral-500">
+                      部屋の終了後に公開され、本のページに短いメッセージとして残ります（30日間・最大4件）。
+                    </div>
+                    <Textarea
+                      value={traceDraft}
+                      onChange={(e) => setTraceDraft(e.target.value)}
+                      placeholder="次に読む人へ、短い一言をどうぞ。"
+                      className="min-h-[88px] rounded-2xl"
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        className="rounded-2xl"
+                        onClick={submitTrace}
+                        disabled={tracing || !traceDraft.trim()}
+                      >
+                        残す
+                      </Button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             )}
           </Card>
