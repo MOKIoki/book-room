@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "読んで、終われない β",
-  description: "読んだ本について、ゆっくり話し続ける場所。",
+  description: "読んだ本について、少し話せる場所。",
 };
 
 export const viewport: Viewport = {
