@@ -384,7 +384,7 @@ export default function TopPage({
 
           <Card className="rounded-3xl shadow-sm">
             <CardHeader>
-              <CardTitle>あかりが灯る</CardTitle>
+              <CardTitle>部屋の灯り</CardTitle>
               <CardDescription>最近動きのあった部屋です。</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
