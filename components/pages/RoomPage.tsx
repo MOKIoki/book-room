@@ -347,7 +347,7 @@ export default function RoomPage({
                   title="この部屋の投稿受付期限を、いまから30日後にリセットします"
                 >
                   30日後まで開く
-                </button>
+                </Button>
                 <Button
                 type="button"
                 className="text-xs text-neutral-500 underline"
