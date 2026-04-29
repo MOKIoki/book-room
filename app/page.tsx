@@ -967,6 +967,20 @@ const leaveTrace = async (body: string) => {
       alert("置き手紙の保存に失敗しました");
     }
   };
+  const reportRoom = async (body: string) => {
+    if (!currentRoom) return;
+    const { error } = await supabase.rpc("report_room_as_anon", {
+      p_room_id: currentRoom.id,
+      p_body: body || null,
+      p_from_name: profile?.name ?? null,
+    });
+    if (error) {
+      console.error(error);
+      alert("送信に失敗しました。");
+      return;
+    }
+    alert("ご報告ありがとうございます。確認します。");
+  };
 
   if (loading) {
     return <div className="p-8">読み込み中...</div>;
