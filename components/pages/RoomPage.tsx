@@ -187,7 +187,6 @@ export default function RoomPage({
   const [traceDraft, setTraceDraft] = useState("");
   const [traceOpen, setTraceOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [traceOpen, setTraceOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scheduledMs = room.scheduled_start_at
