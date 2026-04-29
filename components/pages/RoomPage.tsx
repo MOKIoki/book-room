@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import ReportRoomDialog from "@/components/dialogs/ReportRoomDialog";
 
 const RESERVATION_CAPACITY = 5;
 
@@ -157,6 +158,7 @@ type RoomPageProps = {
   onCancelReservation: () => Promise<void>;
   onExtend: () => Promise<void>;
   onLeaveTrace: (body: string) => Promise<void>;
+  onReport: (body: string) => Promise<void>; 
 };
 
 export default function RoomPage({
@@ -172,6 +174,7 @@ export default function RoomPage({
   onCancelReservation,
   onExtend,
   onLeaveTrace,
+  onReport,
 }: RoomPageProps) {
   const creator =
     room.created_by_profile_id != null
@@ -182,7 +185,8 @@ export default function RoomPage({
   const [sending, setSending] = useState(false);
   const [presenceCount, setPresenceCount] = useState(1);
   const [traceDraft, setTraceDraft] = useState("");
-  const [tracing, setTracing] = useState(false);
+  const [traceOpen, setTraceOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [traceOpen, setTraceOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -268,6 +272,7 @@ export default function RoomPage({
   };
 
   return (
+  <>
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -343,6 +348,13 @@ export default function RoomPage({
                 >
                   30日後まで開く
                 </button>
+                <button
+                type="button"
+                className="text-xs text-neutral-500 underline"
+                onClick={() => setReportOpen(true)}
+              >
+                管理人に伝える
+              </button>
               )}
             </div>
           </CardHeader>
@@ -549,5 +561,14 @@ export default function RoomPage({
         )}
       </div>
     </div>
-  );
+    <ReportRoomDialog
+      open={reportOpen}
+      onOpenChange={setReportOpen}
+      onReport={async (body) => {
+        await onReport(body);
+        setReportOpen(false);
+      }}
+    />
+  </>
+);
 }
