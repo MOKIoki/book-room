@@ -516,8 +516,8 @@ export default function TopPage({
         <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-3xl font-semibold">本をひらく</h2>
-              <p className="mt-1 text-neutral-500">本を開く。部屋がひらく。</p>
+              <h2 className="text-3xl font-semibold">本を開く、部屋がひらく。</h2>
+              <p className="mt-1 text-neutral-500">本について話しましょう。話題ことに部屋を作れます</p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -567,7 +567,7 @@ export default function TopPage({
                         className="rounded-full"
                         onClick={() => onOpenBook(book.id)}
                       >
-                        この本のページへ
+                        ひらく
                       </Button>
                     </CardContent>
                   </Card>
