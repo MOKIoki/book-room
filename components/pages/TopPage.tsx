@@ -467,10 +467,15 @@ export default function TopPage({
 
         <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-semibold">本を開く、部屋がひらく。</h2>
-              <p className="mt-1 text-neutral-500">読んだ本について、少し話せる場所です。話題ごとに部屋を作ることもできます。
-            </div>
+           <div>
+  <h2 className="text-3xl font-semibold">本を開く、部屋がひらく。</h2>
+  <p className="mt-1 text-neutral-500">
+    読んだ本について、少し話せる場所です。話題ごとに部屋を作ることもできます。
+  </p>
+  <p className="mt-2 text-xs text-neutral-400">
+    登録された本 {books.length}冊
+  </p>
+</div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative w-full sm:w-[360px]">
