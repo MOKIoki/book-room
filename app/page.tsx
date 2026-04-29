@@ -553,13 +553,14 @@ const hasFavorites =
       : null;
   const currentRoomExpired = currentRoom ? isRoomExpired(currentRoom) : false;
 
-  const recentHeats = useMemo(() => {
+const recentHeats = useMemo(() => {
     const heats = books.flatMap((book) =>
       book.traces.map((trace) => ({
         bookId: book.id,
         bookTitle: book.title,
         body: trace.body,
         roomTitle: trace.room_title ?? null,
+        roomId: trace.room_id ?? null,
         createdAt: trace.created_at,
       })),
     );
