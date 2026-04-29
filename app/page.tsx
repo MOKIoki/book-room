@@ -1049,6 +1049,7 @@ const leaveTrace = async (body: string) => {
             onCancelReservation={cancelReservation}
             onExtend={extendRoom}
             onLeaveTrace={leaveTrace}
+            onReport={reportRoom} 
           />
         )}
 
