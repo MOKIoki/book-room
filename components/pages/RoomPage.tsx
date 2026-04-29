@@ -381,11 +381,14 @@ export default function RoomPage({
                     予約する
                   </Button>
                 )}
-                {room.reservations.length > 0 && (
+                 {room.reservations.length > 0 && (
                   <div className="text-xs text-sky-800/80">
                     予約者:{" "}
                     {room.reservations
-                      .map((r) => r.profile_name ?? "匿名")
+                      .map((r) => {
+                        const p = profiles?.find((pp) => pp.id === r.profile_id);
+                        return p?.name ?? r.profile_name ?? "匿名";
+                      })
                       .join(" / ")}
                   </div>
                 )}
