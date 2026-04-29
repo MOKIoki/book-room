@@ -212,6 +212,10 @@ export default function RoomPage({
     expiresMs !== null &&
     expiresMs - Date.now() <= 60 * 60 * 1000 &&
     expiresMs > Date.now();
+  // X9: 終了済み判定 + 既存 trace 検出 (existingTrace は後続ターンで使用)
+  const isExpired = expiresMs !== null && expiresMs <= Date.now();
+  const existingTrace =
+    book.traces?.find((t) => t.room_id === room.id) ?? null;
 
   // Presence
   useEffect(() => {
@@ -318,7 +322,7 @@ export default function RoomPage({
               </span>
               <span>{formatRelativeTime(room.updated_at)}</span>
               <span>{formatExpiresAt(room.expires_at)}</span>
-                {!isBeforeStart && room.expires_at && (
+               {!isBeforeStart && !isExpired && room.expires_at && (
                 <button
                   type="button"
                   className="text-xs text-neutral-500 underline"
