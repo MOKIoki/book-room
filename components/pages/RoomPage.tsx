@@ -339,22 +339,25 @@ export default function RoomPage({
               </span>
               <span>{formatRelativeTime(room.updated_at)}</span>
               <span>{formatExpiresAt(room.expires_at)}</span>
-               {!isBeforeStart && !isExpired && room.expires_at && (
-                <button
-                  type="button"
-                  className="text-xs text-neutral-500 underline"
-                  onClick={() => onExtend()}
-                  title="この部屋の投稿受付期限を、いまから30日後にリセットします"
-                >
-                  30日後まで開く
-                </Button>
-                <Button
-                type="button"
-                className="text-xs text-neutral-500 underline"
-                onClick={() => setReportOpen(true)}
-              >
-                管理人に伝える
-              </Button>
+              {!isBeforeStart && !isExpired && room.expires_at && (
+  <Button
+    variant="outline"
+    className="rounded-2xl"
+    onClick={() => onExtend()}
+    title="この部屋の投稿受付期限を、いまから30日後にリセットします"
+  >
+    30日後まで開く
+  </Button>
+)}
+
+<Button
+  type="button"
+  variant="ghost"
+  className="h-auto p-0 text-xs text-neutral-500 underline"
+  onClick={() => setReportOpen(true)}
+>
+  管理人に伝える
+</Button>
               )}
             </div>
           </CardHeader>
