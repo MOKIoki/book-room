@@ -379,29 +379,37 @@ export default function BookPage({
                   : null;
                 const isScheduled =
                   scheduledMs !== null && scheduledMs > Date.now();
-                return (
-                  <div
-                    key={room.id}
-                    className={`rounded-3xl border p-5 ${
-                      isScheduled
-                        ? "border-sky-200 bg-sky-50/40"
-                        : "border-neutral-200 bg-white"
-                    }`}
-                  >
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 text-lg font-medium leading-7">
-                          <span>{room.title}</span>
-                          {isNewItem(room.updated_at) && <NewMark />}
-                          {isScheduled && (
-                            <Badge
-                              variant="outline"
-                              className="border-sky-300 bg-white text-sky-700"
-                            >
-                              予約読書会
-                            </Badge>
-                          )}
-                        </div>
+               return (
+                    <div
+                      key={room.id}
+                      className={`rounded-3xl border p-5 ${
+                        isScheduled
+                          ? "border-sky-200 bg-sky-50/40"
+                          : "border-neutral-200"
+                      } ${room.hidden_at ? "opacity-50" : ""}`}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2 text-lg font-medium leading-7">
+                            <span>{room.title}</span>
+                            {isNewItem(room.updated_at) && <NewMark />}
+                            {isScheduled && (
+                              <Badge
+                                variant="outline"
+                                className="border-sky-300 bg-white text-sky-700"
+                              >
+                                予約読書会
+                              </Badge>
+                            )}
+                            {room.hidden_at && (
+                              <Badge
+                                variant="outline"
+                                className="border-amber-300 bg-amber-50 text-amber-700"
+                              >
+                                非表示中
+                              </Badge>
+                            )}
+                          </div>
                         <div className="mt-2">
                           <RoomBadge room={room} />
                         </div>
