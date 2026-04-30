@@ -192,10 +192,9 @@ export default function RoomPage({
   const [presenceCount, setPresenceCount] = useState(1);
   const [traceDraft, setTraceDraft] = useState("");
   const [traceOpen, setTraceOpen] = useState(false);
-　const [reportOpen, setReportOpen] = useState(false);
-　const [tracing, setTracing] = useState(false);
-　const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
+  const [reportOpen, setReportOpen] = useState(false);
+  const [tracing, setTracing] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const scheduledMs = room.scheduled_start_at
     ? new Date(room.scheduled_start_at).getTime()
     : null;
