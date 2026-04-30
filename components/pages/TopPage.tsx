@@ -398,10 +398,22 @@ export default function TopPage({
                     key={`${room.bookId}-${room.id}`}
                     type="button"
                     onClick={() => onEnterActiveRoom(room.bookId, room.id)}
-                    className="block w-full rounded-2xl border border-neutral-200 px-4 py-4 text-left hover:bg-neutral-50"
+                    className={`block w-full rounded-2xl border border-neutral-200 px-4 py-4 text-left hover:bg-neutral-50 ${
+                      room.hidden_at ? "opacity-50" : ""
+                    }`}
                   >
                     <div className="text-sm text-neutral-500">{room.bookTitle}</div>
-                    <div className="mt-1 text-lg font-medium">{room.title}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-lg font-medium">
+                      <span>{room.title}</span>
+                      {room.hidden_at && (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-300 bg-amber-50 text-amber-700"
+                        >
+                          非表示中
+                        </Badge>
+                      )}
+                    </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <RoomBadge room={room} />
                     </div>
