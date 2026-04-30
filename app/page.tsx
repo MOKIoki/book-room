@@ -66,7 +66,6 @@ export default function Page() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [myProfileId, setMyProfileId] = useState<number | null>(null);
   const [localBrowserToken, setLocalBrowserToken] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [pendingEntry, setPendingEntry] = useState<
     { bookId: string; roomId: number } | null
