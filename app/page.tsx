@@ -1113,6 +1113,9 @@ const leaveTrace = async (body: string) => {
             onExtend={extendRoom}
             onLeaveTrace={leaveTrace}
             onReport={reportRoom} 
+            isAdmin={isAdmin}
+　　　　　　　onHideRoom={hideRoom}
+　　　　　　　onUnhideRoom={unhideRoom}
           />
         )}
 
