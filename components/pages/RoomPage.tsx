@@ -163,7 +163,6 @@ type RoomPageProps = {
   onHideRoom: (roomId: number) => Promise<void>;
   onUnhideRoom: (roomId: number) => Promise<void>;
 };
-};
 
 export default function RoomPage({
   book,
