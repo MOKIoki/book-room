@@ -906,11 +906,7 @@ const createRoom = async (payload: {
     alert("この部屋を表示に戻しました。");
     await loadAll({ silent: true });
   };
-    onLeaveTrace={leaveTrace}
-            onReport={reportRoom}
-            isAdmin={isAdmin}
-            onHideRoom={hideRoom}
-            onUnhideRoom={unhideRoom}
+  x
 
     const { error } = await supabase.rpc("delete_room_as_creator", {
       p_room_id: roomId,
