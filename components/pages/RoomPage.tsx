@@ -159,6 +159,10 @@ type RoomPageProps = {
   onExtend: () => Promise<void>;
   onLeaveTrace: (body: string) => Promise<void>;
   onReport: (body: string) => Promise<void>; 
+  isAdmin: boolean;
+  onHideRoom: (roomId: number) => Promise<void>;
+  onUnhideRoom: (roomId: number) => Promise<void>;
+};
 };
 
 export default function RoomPage({
@@ -175,6 +179,9 @@ export default function RoomPage({
   onExtend,
   onLeaveTrace,
   onReport,
+  isAdmin,
+  onHideRoom,
+  onUnhideRoom,
 }: RoomPageProps) {
   const creator =
     room.created_by_profile_id != null
@@ -218,10 +225,10 @@ export default function RoomPage({
     expiresMs > Date.now();
   // X9: 終了済み判定 + 既存 trace 検出 (existingTrace は後続ターンで使用)
   const isExpired = expiresMs !== null && expiresMs <= Date.now();
+  const isHidden = !!room.hidden_at;
   const existingTrace =
     book.traces?.find((t) => t.room_id === room.id) ?? null;
-
-  // Presence
+    // Presence
   useEffect(() => {
     const channel = supabase.channel(`presence-room-${room.id}`);
     channel
@@ -295,10 +302,27 @@ export default function RoomPage({
                 部屋を削除
               </Button>
             )}
+            {isAdmin && (
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={async () => {
+                  if (isHidden) {
+                    await onUnhideRoom(room.id);
+                  } else {
+                    const ok = window.confirm("この部屋を運営非表示にしますか?");
+                    if (!ok) return;
+                    await onHideRoom(room.id);
+                  }
+                }}
+              >
+                {isHidden ? "表示に戻す" : "運営非表示にする"}
+              </Button>
+            )}
           </div>
         </div>
 
-        <Card className="rounded-3xl border-0 shadow-sm">
+        <Card className={`rounded-3xl border-0 shadow-sm ${isHidden ? "opacity-60" : ""}`}>
           <CardHeader className="border-b border-neutral-100 pb-5">
             <div className="text-sm text-neutral-500">{book.title}</div>
           <CardTitle className="flex flex-wrap items-center gap-2 text-2xl leading-8">
@@ -308,12 +332,20 @@ export default function RoomPage({
                   予約読書会
                 </Badge>
               )}
-              {isExpired && (
+             {isExpired && (
                 <Badge
                   variant="outline"
                   className="border-neutral-400 bg-neutral-100 text-neutral-700"
                 >
                   終了済み
+                </Badge>
+              )}
+              {isHidden && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-400 bg-amber-100 text-amber-800"
+                >
+                  非表示中
                 </Badge>
               )}
             </CardTitle>
