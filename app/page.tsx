@@ -21,6 +21,7 @@ import CreateRoomDialog from "@/components/dialogs/CreateRoomDialog";
 import MyLogDialog from "@/components/dialogs/MyLogDialog";
 import ProfileMenuDialog from "@/components/dialogs/ProfileMenuDialog";
 import ContactDialog from "@/components/dialogs/ContactDialog";
+import TransferProfileDialog from "@/components/dialogs/TransferProfileDialog";
 
 type PageState =
   | { type: "top" }
@@ -77,7 +78,7 @@ export default function Page() {
   const [myLogOpen, setMyLogOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-
+  const [transferOpen, setTransferOpen] = useState(false);
   const [lastSeenMap, setLastSeenMap] = useState<Record<number, string>>({});
 
   const isPopStateRef = useRef(false);
@@ -318,6 +319,93 @@ const hasFavorites =
       alert("ブラウザの認証 token が未設定です。");
       return;
     }
+    // X2: 別端末から既存 profile を引き継ぐ (= transfer_profile_to_this_browser)
+  // 戻り値: 成功 true / 失敗 false (= dialog 側で input 段階に戻す)
+  const handleTransferProfile = async (
+    name: string,
+    passphrase: string,
+  ): Promise<boolean> => {
+    if (!localBrowserToken) {
+      alert("ブラウザの認証 token が未設定です。");
+      return false;
+    }
+
+    const { data: transferredId, error: transferError } = await supabase.rpc(
+      "transfer_profile_to_this_browser",
+      {
+        p_name: name,
+        p_passphrase: passphrase,
+        p_new_token: localBrowserToken,
+      },
+    );
+
+    if (transferError) {
+      const msg = transferError.message ?? "";
+      if (
+        msg.includes("name_required") ||
+        msg.includes("passphrase_required") ||
+        msg.includes("browser_token_required")
+      ) {
+        alert("名前と合言葉を入力してください");
+      } else if (msg.includes("profile_not_found")) {
+        alert("その名前のプロフィールは見つかりません");
+      } else if (msg.includes("multiple_profiles_found")) {
+        alert("同名のプロフィールが複数あります。お問い合わせください");
+      } else if (msg.includes("passphrase_not_set_on_target")) {
+        alert(
+          "この名前のプロフィールには合言葉が設定されていません。もとの端末で合言葉を設定してから、もう一度お試しください。",
+        );
+      } else if (msg.includes("invalid_passphrase")) {
+        alert("合言葉が一致しません");
+      } else if (msg.includes("browser_already_has_profile")) {
+        alert(
+          "このブラウザは既に別のプロフィールを使っています。一度この端末の設定を解除してから、もう一度お試しください",
+        );
+      } else {
+        alert(`引き継ぎに失敗しました: ${msg}`);
+      }
+      return false;
+    }
+
+    if (typeof transferredId !== "number") return false;
+
+    // 引き継ぎ成功 → get_my_profile で公開列を取得して localStorage / state に反映
+    const { data: rows } = await supabase.rpc("get_my_profile", {
+      p_browser_token: localBrowserToken,
+    });
+    const row = (
+      rows as Array<{
+        id: number;
+        name: string;
+        color: string;
+        favorite_book_id: string | null;
+        favorite_note: string | null;
+      }> | null
+    )?.[0];
+
+    if (!row) {
+      alert(
+        "引き継ぎは成功しましたが、プロフィール取得に失敗しました。リロードしてください。",
+      );
+      return false;
+    }
+
+    const transferredProfile: UserProfile = {
+      name: row.name,
+      color: row.color,
+      favoriteBookId: row.favorite_book_id,
+      favoriteNote: row.favorite_note,
+      passphrase: passphrase || null,
+    };
+
+    setMyProfileId(row.id);
+    setProfile(transferredProfile);
+    localStorage.setItem(
+      "book-room-profile",
+      JSON.stringify(transferredProfile),
+    );
+    return true;
+  };
 
     const { data: claimedId, error: claimError } = await supabase.rpc(
       "claim_legacy_profile_by_name",
@@ -1187,9 +1275,10 @@ const leaveTrace = async (body: string) => {
         onOpenProfileSetting={() => setProfileDialogOpen(true)}
         onClearLocalProfile={clearLocalProfile}
         onOpenContact={() => setContactOpen(true)}
+        onOpenTransfer={() => setTransferOpen(true)}
       />
 
-      <NameSetupDialog
+<NameSetupDialog
         open={profileDialogOpen}
         initialName={profile?.name ?? ""}
         initialColor={profile?.color ?? "slate"}
@@ -1203,7 +1292,17 @@ const leaveTrace = async (body: string) => {
           setProfileDialogOpen(false);
           setPendingEntry(null);
         }}
-        onRequestAddBook={() => setAddBookOpen(true)}
+onRequestAddBook={() => setAddBookOpen(true)}
+        onRequestTransfer={() => {
+          setProfileDialogOpen(false);
+          setTransferOpen(true);
+        }}
+      />
+
+      <TransferProfileDialog
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+        onTransfer={handleTransferProfile}
       />
     </>
   );
