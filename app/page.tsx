@@ -873,6 +873,45 @@ const createRoom = async (payload: {
       alert("プロフィールが未設定です。");
       return;
     }
+    const hideRoom = async (roomId: number) => {
+    if (myProfileId === null || !localBrowserToken) {
+      alert("プロフィールが未設定です。");
+      return;
+    }
+    const { error } = await supabase.rpc("hide_room_by_admin", {
+      p_room_id: roomId,
+      p_admin_profile_id: myProfileId,
+      p_admin_browser_token: localBrowserToken,
+      p_admin_passphrase: profile?.passphrase ?? null,
+    });
+    if (error) {
+      alert(`非表示にできませんでした: ${error.message}`);
+      return;
+    }
+    alert("この部屋を非表示にしました。");
+    await loadAll({ silent: true });
+  };
+
+  const unhideRoom = async (roomId: number) => {
+    if (myProfileId === null || !localBrowserToken) return;
+    const { error } = await supabase.rpc("unhide_room_by_admin", {
+      p_room_id: roomId,
+      p_admin_profile_id: myProfileId,
+      p_admin_browser_token: localBrowserToken,
+      p_admin_passphrase: profile?.passphrase ?? null,
+    });
+    if (error) {
+      alert(`表示に戻せませんでした: ${error.message}`);
+      return;
+    }
+    alert("この部屋を表示に戻しました。");
+    await loadAll({ silent: true });
+  };
+    onLeaveTrace={leaveTrace}
+            onReport={reportRoom}
+            isAdmin={isAdmin}
+            onHideRoom={hideRoom}
+            onUnhideRoom={unhideRoom}
 
     const { error } = await supabase.rpc("delete_room_as_creator", {
       p_room_id: roomId,
