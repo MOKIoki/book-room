@@ -558,8 +558,6 @@ const hasFavorites =
   }, []);
 
   const currentBook =
-    page.type !== "top" ? books.find((b) => b.id === page.bookId) ?? null : null;
-  const currentBook =
     page.type !== "top" ? visibleBooks.find((b) => b.id === page.bookId) ?? null : null;
   const currentRoom =
     page.type === "room" && currentBook
