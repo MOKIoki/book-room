@@ -27,9 +27,9 @@ type NameSetupDialogProps = {
   initialPassphrase?: string | null;
   books: Book[];
   onSave: (profile: UserProfile) => void;
-  onClaim?: (name: string, passphrase: string) => Promise<void>;  // X1: 既存 profile を claim
   onClose?: () => void;
   onRequestAddBook?: () => void;
+  onRequestTransfer?: () => void;
 };
 
 export default function NameSetupDialog({
@@ -44,6 +44,7 @@ export default function NameSetupDialog({
   onClaim,
   onClose,
   onRequestAddBook,
+  onRequestTransfer,
 }: NameSetupDialogProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
@@ -203,7 +204,7 @@ export default function NameSetupDialog({
               )}
             </>
           )}
-          <div className="space-y-2">
+         <div className="space-y-2">
             <Label>合言葉(任意)</Label>
             <Input
               value={passphrase}
@@ -215,8 +216,19 @@ export default function NameSetupDialog({
               別の端末から同じ名前で入る時に本人確認に使います。他の人には見えません。
             </p>
           </div>
-        </div>
 
+          {onRequestTransfer && (
+            <div className="border-t pt-4 text-center">
+              <button
+                type="button"
+                onClick={onRequestTransfer}
+                className="text-xs text-neutral-500 underline hover:text-neutral-700"
+              >
+                別の端末で作ったプロフィールを使いたい場合はこちら
+              </button>
+            </div>
+          )}
+        </div>
         <DialogFooter className="border-t px-4 py-3 sm:py-4">
           {onClose && (
             <Button variant="outline" className="rounded-2xl" onClick={onClose}>
