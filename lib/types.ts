@@ -27,6 +27,9 @@ export type Room = {
   created_at?: string;
   scheduled_start_at: string | null;
   created_by_profile_id: number | null;
+  hidden_at: string | null;
+  hidden_by_profile_id: number | null;
+  hidden_reason: string | null;
   messages: Message[];
   reservations: Reservation[];
 };
@@ -68,10 +71,4 @@ export type ProfileRecord = {
   color: string;
   favorite_book_id: string | null;
   favorite_note: string | null;
-};
-
-export type Room = {
-  // ...既存のフィールド...
-  hidden_at: string | null;
-  hidden_by_profile_id: number | null;
 };
