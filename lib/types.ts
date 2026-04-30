@@ -69,3 +69,9 @@ export type ProfileRecord = {
   favorite_book_id: string | null;
   favorite_note: string | null;
 };
+
+export type Room = {
+  // ...既存のフィールド...
+  hidden_at: string | null;
+  hidden_by_profile_id: number | null;
+};
