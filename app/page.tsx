@@ -62,10 +62,11 @@ export default function Page() {
   const [createOpen, setCreateOpen] = useState(false);
   const [addBookOpen, setAddBookOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
+　const [isAdmin, setIsAdmin] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [myProfileId, setMyProfileId] = useState<number | null>(null);
   const [localBrowserToken, setLocalBrowserToken] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [pendingEntry, setPendingEntry] = useState<
     { bookId: string; roomId: number } | null
@@ -282,7 +283,21 @@ const hasFavorites =
     profile?.passphrase,
     localBrowserToken,
   ]);
-
+// admin 判定: am_i_admin RPC で確認、UI 表示制御用
+  // 実行時の権限ゲートは hide/unhide_room_by_admin 内部で別途行われる
+  useEffect(() => {
+    if (!localBrowserToken) {
+      setIsAdmin(false);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase.rpc("am_i_admin", {
+        p_browser_token: localBrowserToken,
+      });
+      setIsAdmin(data === true);
+    })();
+  }, [localBrowserToken]);
+  
   const saveProfile = (nextProfile: UserProfile) => {
     setProfile(nextProfile);
     localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
@@ -552,9 +567,19 @@ const hasFavorites =
       ? currentBook.rooms.find((r) => r.id === page.roomId) ?? null
       : null;
   const currentRoomExpired = currentRoom ? isRoomExpired(currentRoom) : false;
-
+// 一般ユーザーには hidden_at が立った部屋を見せない。admin は全部見える。
+  const visibleBooks = useMemo(
+    () =>
+      isAdmin
+        ? books
+        : books.map((b) => ({
+            ...b,
+            rooms: b.rooms.filter((r) => !r.hidden_at),
+          })),
+    [books, isAdmin],
+  );
 const recentHeats = useMemo(() => {
-    const heats = books.flatMap((book) =>
+    const heats = visibleBooks.flatMap((book) =>
       book.traces.map((trace) => ({
         bookId: book.id,
         bookTitle: book.title,
