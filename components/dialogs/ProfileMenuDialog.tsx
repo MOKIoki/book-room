@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Bell, Mail, UserCog, LogOut } from "lucide-react";
+import { BookOpen, Bell, Mail, UserCog, LogOut, UserPlus } from "lucide-react";
 import type { UserProfile } from "@/lib/types";
 import {
   Dialog,
@@ -33,6 +33,7 @@ type ProfileMenuDialogProps = {
   onOpenProfileSetting: () => void;
   onClearLocalProfile: () => void;
   onOpenContact: () => void;
+  onOpenTransfer: () => void;
 };
 
 export default function ProfileMenuDialog({
@@ -45,6 +46,7 @@ export default function ProfileMenuDialog({
   onOpenProfileSetting,
   onClearLocalProfile,
   onOpenContact,
+  onOpenTransfer,
 }: ProfileMenuDialogProps) {
   const chip = getChip(currentProfile?.color);
 
@@ -90,12 +92,21 @@ export default function ProfileMenuDialog({
             }}
           />
 
-          <MenuItem
+         <MenuItem
             icon={<Mail className="h-4 w-4" />}
             label="管理人に伝える"
             onClick={() => {
               close();
               onOpenContact();
+            }}
+          />
+
+          <MenuItem
+            icon={<UserPlus className="h-4 w-4" />}
+            label="別端末から引き継ぐ"
+            onClick={() => {
+              close();
+              onOpenTransfer();
             }}
           />
 
