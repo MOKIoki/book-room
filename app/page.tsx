@@ -62,7 +62,7 @@ export default function Page() {
   const [createOpen, setCreateOpen] = useState(false);
   const [addBookOpen, setAddBookOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-　const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [myProfileId, setMyProfileId] = useState<number | null>(null);
   const [localBrowserToken, setLocalBrowserToken] = useState<string | null>(null);
@@ -106,10 +106,9 @@ export default function Page() {
       } catch {
         setProfile(null);
       }
-      // browser_token: localStorage になければ生成、あればそのまま使う。
-    // 11_policies 適用後の RPC 認証で使う想定。
-    // 現時点では state に保持するだけで、既存のプロフィール作成・更新には
-    // 接続しない (= 副作用なし)。
+    }
+
+    // browser_token: localStorage になければ生成、あればそのまま使う。
     const savedToken = window.localStorage.getItem("book-room-browser-token");
     if (savedToken) {
       setLocalBrowserToken(savedToken);
@@ -117,7 +116,6 @@ export default function Page() {
       const newToken = crypto.randomUUID();
       window.localStorage.setItem("book-room-browser-token", newToken);
       setLocalBrowserToken(newToken);
-    }
     }
 
     const savedSeen = window.localStorage.getItem("book-room-last-seen");
@@ -865,14 +863,46 @@ const createRoom = async (payload: {
     }
   };
 
-  // 作成者本人のみ削除可能。RPC 経由で DB 側が二重チェックする。
+// 作成者本人のみ削除可能。RPC 経由で DB 側が二重チェックする。
   // β方針: 合言葉はローカルプロフィールから自動で渡す(UI 入力なし)。
   const deleteRoom = async (roomId: number) => {
-   if (myProfileId === null || !localBrowserToken) {
+    if (myProfileId === null || !localBrowserToken) {
       alert("プロフィールが未設定です。");
       return;
     }
-    const hideRoom = async (roomId: number) => {
+
+    const { error } = await supabase.rpc("delete_room_as_creator", {
+      p_room_id: roomId,
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: profile?.passphrase ?? null,
+    });
+
+    if (error) {
+      const msg = error.message ?? "";
+      if (msg.includes("not_room_creator")) {
+        alert("この部屋はあなたが作成したものではありません。");
+      } else if (msg.includes("invalid_passphrase")) {
+        alert(
+          "合言葉が一致しません。プロフィールの合言葉を見直して保存し直してください。",
+        );
+      } else if (msg.includes("room_not_found")) {
+        alert("部屋が見つかりません。一覧を更新します。");
+      } else {
+        alert(`削除に失敗しました: ${msg}`);
+      }
+      return;
+    }
+
+    await loadAll({ silent: true });
+    if (currentBook) {
+      setPage({ type: "book", bookId: currentBook.id });
+    } else {
+      setPage({ type: "top" });
+    }
+  };
+
+  const hideRoom = async (roomId: number) => {
     if (myProfileId === null || !localBrowserToken) {
       alert("プロフィールが未設定です。");
       return;
@@ -905,38 +935,6 @@ const createRoom = async (payload: {
     }
     alert("この部屋を表示に戻しました。");
     await loadAll({ silent: true });
-  };
-  x
-
-    const { error } = await supabase.rpc("delete_room_as_creator", {
-      p_room_id: roomId,
-      p_profile_id: myProfileId,
-      p_browser_token: localBrowserToken,
-      p_passphrase: profile?.passphrase ?? null,
-    });
-
-    if (error) {
-      const msg = error.message ?? "";
-      if (msg.includes("not_room_creator")) {
-        alert("この部屋はあなたが作成したものではありません。");
-      } else if (msg.includes("invalid_passphrase")) {
-        alert(
-          "合言葉が一致しません。プロフィールの合言葉を見直して保存し直してください。",
-        );
-      } else if (msg.includes("room_not_found")) {
-        alert("部屋が見つかりません。一覧を更新します。");
-      } else {
-        alert(`削除に失敗しました: ${msg}`);
-      }
-      return;
-    }
-
-    await loadAll({ silent: true });
-    if (currentBook) {
-      setPage({ type: "book", bookId: currentBook.id });
-    } else {
-      setPage({ type: "top" });
-    }
   };
 
 const reserve = async () => {
@@ -1110,8 +1108,8 @@ const leaveTrace = async (body: string) => {
             onLeaveTrace={leaveTrace}
             onReport={reportRoom} 
             isAdmin={isAdmin}
-　　　　　　　onHideRoom={hideRoom}
-　　　　　　　onUnhideRoom={unhideRoom}
+            onHideRoom={hideRoom}
+            onUnhideRoom={unhideRoom}
           />
         )}
 
