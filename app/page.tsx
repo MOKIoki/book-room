@@ -556,16 +556,7 @@ const hasFavorites =
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const currentBook =
-    page.type !== "top" ? visibleBooks.find((b) => b.id === page.bookId) ?? null : null;
-  const currentRoom =
-    page.type === "room" && currentBook
-      ? currentBook.rooms.find((r) => r.id === page.roomId) ?? null
-      : null;
-  const currentRoomExpired = currentRoom ? isRoomExpired(currentRoom) : false;
-// 一般ユーザーには hidden_at が立った部屋を見せない。admin は全部見える。
-  const visibleBooks = useMemo(
+ const visibleBooks = useMemo(
     () =>
       isAdmin
         ? books
@@ -575,6 +566,15 @@ const hasFavorites =
           })),
     [books, isAdmin],
   );
+  const currentBook =
+    page.type !== "top" ? visibleBooks.find((b) => b.id === page.bookId) ?? null : null;
+  const currentRoom =
+    page.type === "room" && currentBook
+      ? currentBook.rooms.find((r) => r.id === page.roomId) ?? null
+      : null;
+  const currentRoomExpired = currentRoom ? isRoomExpired(currentRoom) : false;
+// 一般ユーザーには hidden_at が立った部屋を見せない。admin は全部見える。
+ 
 const recentHeats = useMemo(() => {
     const heats = visibleBooks.flatMap((book) =>
       book.traces.map((trace) => ({
