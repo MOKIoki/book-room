@@ -1076,6 +1076,42 @@ const leaveTrace = async (body: string) => {
           onOpenMobileMenu={() => setProfileMenuOpen(true)}
         />
       )}
+      {/* book / room が解決できない場合のフォールバック (= 非表示部屋への直アクセス含む) */}
+      {!loading && page.type === "book" && !currentBook && (
+        <div className="min-h-screen bg-neutral-50 text-neutral-900">
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+            <div className="text-2xl font-semibold">本が見つかりません</div>
+            <p className="mt-3 text-sm leading-6 text-neutral-500">
+              この本は表示できません。削除されたか、表示できない状態かもしれません。
+            </p>
+            <button
+              type="button"
+              onClick={() => setPage({ type: "top" })}
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-5 py-2 text-sm shadow-sm hover:bg-neutral-50"
+            >
+              トップに戻る
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!loading && page.type === "room" && (!currentBook || !currentRoom) && (
+        <div className="min-h-screen bg-neutral-50 text-neutral-900">
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+            <div className="text-2xl font-semibold">部屋が見つかりません</div>
+            <p className="mt-3 text-sm leading-6 text-neutral-500">
+              この部屋は表示できません。終了したか、運営により非表示になっているかもしれません。
+            </p>
+            <button
+              type="button"
+              onClick={() => setPage({ type: "top" })}
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-5 py-2 text-sm shadow-sm hover:bg-neutral-50"
+            >
+              トップに戻る
+            </button>
+          </div>
+        </div>
+      )}
 
 {/* 閉室後: 作成者は RoomPage (= 置き手紙導線あり)、それ以外は ExpiredRoomPage */}
       {page.type === "room" &&
