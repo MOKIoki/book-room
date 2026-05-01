@@ -402,10 +402,6 @@ const hasFavorites =
     return true;
   };
 
-    const { data: claimedId, error: claimError } = await supabase.rpc(
-
-    );
-
     if (claimError) {
       const msg = claimError.message ?? "";
       if (msg.includes("profile_not_found") || msg.includes("name_mismatch")) {
