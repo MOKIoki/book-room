@@ -432,6 +432,16 @@ const hasFavorites =
     localStorage.removeItem("book-room-profile");
     setProfile(null);
     setMyProfileId(null);
+    // 新しい browser-token を発行して localStorage と state を同期する。
+    // これで am_i_admin(新 token) = false になり、transfer 時の
+    // browser_already_has_profile も起きなくなる。
+    // 注: DB 側の旧 row.browser_token は残る (= 短期 MVP で許容)。
+    //     将来 release_my_browser_token RPC で DB 側も解放する案あり。
+    if (typeof window !== "undefined" && typeof crypto !== "undefined") {
+      const newToken = crypto.randomUUID();
+      window.localStorage.setItem("book-room-browser-token", newToken);
+      setLocalBrowserToken(newToken);
+    }
   };
 
   const loadAll = async (options: { silent?: boolean } = {}) => {
