@@ -46,7 +46,6 @@ export default function NameSetupDialog({
   onClose,
   onRequestAddBook,
   onRequestTransfer,
-  onClaim,
 }: NameSetupDialogProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
