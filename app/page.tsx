@@ -1279,26 +1279,25 @@ const leaveTrace = async (body: string) => {
       />
 
 <NameSetupDialog
-        open={profileDialogOpen}
-        initialName={profile?.name ?? ""}
-        initialColor={profile?.color ?? "slate"}
-        initialFavoriteBookId={profile?.favoriteBookId ?? null}
-        initialFavoriteNote={profile?.favoriteNote ?? null}
-        initialPassphrase={profile?.passphrase ?? null}
-        onClaim={handleClaim}
-        books={books}
-        onSave={saveProfile}
-        onClose={() => {
-          setProfileDialogOpen(false);
-          setPendingEntry(null);
-        }}
-onRequestAddBook={() => setAddBookOpen(true)}
-        onRequestTransfer={() => {
-          setProfileDialogOpen(false);
-          setTransferOpen(true);
-        }}
-      />
-
+  open={profileDialogOpen}
+  initialName={profile?.name ?? ""}
+  initialColor={profile?.color ?? "slate"}
+  initialFavoriteBookId={profile?.favoriteBookId ?? null}
+  initialFavoriteNote={profile?.favoriteNote ?? null}
+  initialPassphrase={profile?.passphrase ?? null}
+  onClaim={handleClaim}
+  books={books}
+  onSave={saveProfile}
+  onClose={() => {
+    setProfileDialogOpen(false);
+    setPendingEntry(null);
+  }}
+  onRequestAddBook={() => setAddBookOpen(true)}
+  onRequestTransfer={() => {
+    setProfileDialogOpen(false);
+    setTransferDialogOpen(true);
+  }}
+/>
       <TransferProfileDialog
         open={transferOpen}
         onOpenChange={setTransferOpen}
