@@ -319,6 +319,7 @@ const hasFavorites =
       alert("ブラウザの認証 token が未設定です。");
       return;
     }
+    };
     // X2: 別端末から既存 profile を引き継ぐ (= transfer_profile_to_this_browser)
   // 戻り値: 成功 true / 失敗 false (= dialog 側で input 段階に戻す)
   const handleTransferProfile = async (
