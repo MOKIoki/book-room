@@ -313,13 +313,7 @@ const hasFavorites =
     }
     setProfileDialogOpen(false);
   };
-  // X1: 既存 profile を name + passphrase で引き継ぐ
-  const handleClaim = async (name: string, passphrase: string) => {
-    if (!localBrowserToken) {
-      alert("ブラウザの認証 token が未設定です。");
-      return;
-    }
-    };
+ 
     // X2: 別端末から既存 profile を引き継ぐ (= transfer_profile_to_this_browser)
   // 戻り値: 成功 true / 失敗 false (= dialog 側で input 段階に戻す)
   const handleTransferProfile = async (
@@ -439,10 +433,7 @@ const hasFavorites =
 
     if (typeof claimedId !== "number") return;
 
-    // claim 成功 → get_my_profile で公開列を取得して localStorage / state に反映
-    const { data: rows } = await supabase.rpc("get_my_profile", {
-      p_browser_token: localBrowserToken,
-    });
+  
     const row = (
       rows as Array<{
         id: number;
