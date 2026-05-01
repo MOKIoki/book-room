@@ -122,7 +122,7 @@ export default function NameSetupDialog({
            {/* 新規作成事故防止のヒント (= 未設定時のみ) */}
               {!initialName.trim() && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  以前この名前で使っていた場合は、上の「引き継ぐ」からお試しください。
+                  前に使ったプロフィールがある場合は、上の「引き継ぐ」から戻れます。
                 </div>
               )}
               <div className="space-y-2">
