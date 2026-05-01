@@ -203,22 +203,10 @@ export default function NameSetupDialog({
               placeholder="例: ことりのさえずり"
               className="rounded-2xl"
             />
-            <p className="text-xs text-neutral-500">
+           <p className="text-xs text-neutral-500">
               別の端末から同じ名前で入る時に本人確認に使います。他の人には見えません。
             </p>
           </div>
-
-          {onRequestTransfer && (
-            <div className="border-t pt-4 text-center">
-              <button
-                type="button"
-                onClick={onRequestTransfer}
-                className="text-xs text-neutral-500 underline hover:text-neutral-700"
-              >
-                別の端末で作ったプロフィールを使いたい場合はこちら
-              </button>
-            </div>
-          )}
         </div>
         <DialogFooter className="border-t px-4 py-3 sm:py-4">
           {onClose && (
