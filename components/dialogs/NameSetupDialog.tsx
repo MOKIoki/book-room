@@ -89,22 +89,7 @@ export default function NameSetupDialog({
           </DialogHeader>
 
             <div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
-              >
-                新しく作る
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("claim")}
-                className={`flex-1 rounded-xl px-3 py-2 text-sm ${
-                  mode === "claim"
-                    ? "bg-white shadow font-medium"
-                    : "text-neutral-500"
-                }`}
-              >
-                既存を引き継ぐ
-              </button>
-            </div>
-          )}
+   
 
           <div className="space-y-2">
              <Input
@@ -115,7 +100,6 @@ export default function NameSetupDialog({
             />
           </div>
            {/* X1: create モードのみ表示 (claim 時は既存値を保持して非表示) */}
-        {mode === "create" && (
             <>
               {/* X1 補助: 新規作成事故防止のヒント */}
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -191,7 +175,6 @@ export default function NameSetupDialog({
                 </div>
               )}
             </>
-          )}
          <div className="space-y-2">
             <Label>合言葉(任意)</Label>
             <Input
@@ -230,11 +213,7 @@ export default function NameSetupDialog({
                 alert("表示名を入力してください");
                 return;
               }
-              if (mode === "claim" && onClaim) {
-                // X1: 既存 profile を claim
-                await onClaim(name.trim(), passphrase.trim());
-                return;
-              }
+
               onSave({
                 name: name.trim(),
                 color,
@@ -244,7 +223,7 @@ export default function NameSetupDialog({
               });
             }}
           >
-            {mode === "claim" ? "引き継ぐ" : "保存する"}
+            {"保存する"}
           </Button>
         </DialogFooter>
       </DialogContent>
