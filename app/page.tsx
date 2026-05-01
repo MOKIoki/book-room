@@ -21,7 +21,7 @@ import CreateRoomDialog from "@/components/dialogs/CreateRoomDialog";
 import MyLogDialog from "@/components/dialogs/MyLogDialog";
 import ProfileMenuDialog from "@/components/dialogs/ProfileMenuDialog";
 import ContactDialog from "@/components/dialogs/ContactDialog";
-import TransferProfileDialog from "@/components/dialogs/TransferProfileDialog";
+import TransferProfileDialog from "../components/dialogs/TransferProfileDialog";
 
 type PageState =
   | { type: "top" }
