@@ -403,12 +403,7 @@ const hasFavorites =
   };
 
     const { data: claimedId, error: claimError } = await supabase.rpc(
-      "claim_legacy_profile_by_name",
-      {
-        p_name: name,
-        p_passphrase: passphrase,
-        p_new_token: localBrowserToken,
-      },
+
     );
 
     if (claimError) {
