@@ -1292,10 +1292,10 @@ const leaveTrace = async (body: string) => {
     setPendingEntry(null);
   }}
   onRequestAddBook={() => setAddBookOpen(true)}
-  onRequestTransfer={() => {
-    setProfileDialogOpen(false);
-    setTransferDialogOpen(true);
-  }}
+onRequestTransfer={() => {
+  setProfileDialogOpen(false);
+  setTransferOpen(true);
+}}
 />
       <TransferProfileDialog
         open={transferOpen}
