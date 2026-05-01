@@ -41,7 +41,6 @@ export default function NameSetupDialog({
   initialPassphrase,
   books,
   onSave,
-  onClaim,
   onClose,
   onRequestAddBook,
   onRequestTransfer,
