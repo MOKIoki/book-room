@@ -88,8 +88,29 @@ export default function NameSetupDialog({
            <DialogTitle>名前を設定</DialogTitle>
           </DialogHeader>
 
-            <div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
-   
+<div className="space-y-5 py-3 max-h-[65vh] overflow-y-auto px-4">
+
+              {!initialName.trim() && onRequestTransfer && (
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="mb-2 text-sm font-medium">
+                    別の端末で作ったプロフィールを使いますか?
+                  </div>
+                  <p className="mb-3 text-xs leading-5 text-neutral-600">
+                    もとの端末で設定した名前と合言葉で、このブラウザに引き継げます。
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-2xl"
+                    onClick={onRequestTransfer}
+                  >
+                    別端末から引き継ぐ
+                  </Button>
+                  <div className="mt-3 text-center text-xs text-neutral-500">
+                    — または下のフォームで新しく作る —
+                  </div>
+                </div>
+              )}
 
           <div className="space-y-2">
              <Input
@@ -101,10 +122,12 @@ export default function NameSetupDialog({
           </div>
            {/* X1: create モードのみ表示 (claim 時は既存値を保持して非表示) */}
             <>
-              {/* X1 補助: 新規作成事故防止のヒント */}
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                以前にこの名前でアクセスしたことがある場合は、上の「既存を引き継ぐ」を選んでください。新しく作ると別プロフィール扱いになります。
-              </div>
+             {/* 新規作成事故防止のヒント (= 未設定時のみ) */}
+              {!initialName.trim() && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  以前にこの名前でアクセスしたことがある場合は、上の「別端末から引き継ぐ」から引き継いでください。新しく作ると別プロフィール扱いになります。
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>発言の色</Label>
                 <div className="grid w-full grid-cols-2 gap-4">
