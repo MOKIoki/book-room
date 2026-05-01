@@ -1285,7 +1285,6 @@ const leaveTrace = async (body: string) => {
   initialFavoriteBookId={profile?.favoriteBookId ?? null}
   initialFavoriteNote={profile?.favoriteNote ?? null}
   initialPassphrase={profile?.passphrase ?? null}
-  onClaim={handleClaim}
   books={books}
   onSave={saveProfile}
   onClose={() => {
