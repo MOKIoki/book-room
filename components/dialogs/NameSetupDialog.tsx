@@ -30,7 +30,6 @@ type NameSetupDialogProps = {
   onClose?: () => void;
   onRequestAddBook?: () => void;
   onRequestTransfer?: () => void;
-  onClaim: () => void;
 };
 
 export default function NameSetupDialog({
