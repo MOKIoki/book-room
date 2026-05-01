@@ -314,7 +314,7 @@ const hasFavorites =
     setProfileDialogOpen(false);
   };
  
-    // X2: 別端末から既存 profile を引き継ぐ (= transfer_profile_to_this_browser)
+   // X2: 別端末から既存 profile を引き継ぐ (= transfer_profile_to_this_browser)
   // 戻り値: 成功 true / 失敗 false (= dialog 側で input 段階に戻す)
   const handleTransferProfile = async (
     name: string,
@@ -325,49 +325,65 @@ const hasFavorites =
       return false;
     }
 
+    const trimmedName = name.trim();
+    const trimmedPassphrase = passphrase.trim();
+
     const { data: transferredId, error: transferError } = await supabase.rpc(
       "transfer_profile_to_this_browser",
       {
-        p_name: name,
-        p_passphrase: passphrase,
+        p_name: trimmedName,
+        p_passphrase: trimmedPassphrase,
         p_new_token: localBrowserToken,
       },
     );
 
     if (transferError) {
       const msg = transferError.message ?? "";
+
       if (
         msg.includes("name_required") ||
         msg.includes("passphrase_required") ||
         msg.includes("browser_token_required")
       ) {
-        alert("名前と合言葉を入力してください");
+        alert("名前と合言葉を入力してください。");
       } else if (msg.includes("profile_not_found")) {
-        alert("その名前のプロフィールは見つかりません");
+        alert("その名前のプロフィールは見つかりません。");
       } else if (msg.includes("multiple_profiles_found")) {
-        alert("同名のプロフィールが複数あります。お問い合わせください");
+        alert("同名のプロフィールが複数あります。お問い合わせください。");
       } else if (msg.includes("passphrase_not_set_on_target")) {
         alert(
           "この名前のプロフィールには合言葉が設定されていません。もとの端末で合言葉を設定してから、もう一度お試しください。",
         );
       } else if (msg.includes("invalid_passphrase")) {
-        alert("合言葉が一致しません");
+        alert("合言葉が一致しません。");
       } else if (msg.includes("browser_already_has_profile")) {
         alert(
-          "このブラウザは既に別のプロフィールを使っています。一度この端末の設定を解除してから、もう一度お試しください",
+          "このブラウザは既に別のプロフィールを使っています。一度この端末の設定を解除してから、もう一度お試しください。",
         );
       } else {
         alert(`引き継ぎに失敗しました: ${msg}`);
       }
+
       return false;
     }
 
-    if (typeof transferredId !== "number") return false;
+    if (typeof transferredId !== "number") {
+      alert("引き継ぎに失敗しました。");
+      return false;
+    }
 
-    // 引き継ぎ成功 → get_my_profile で公開列を取得して localStorage / state に反映
-    const { data: rows } = await supabase.rpc("get_my_profile", {
-      p_browser_token: localBrowserToken,
-    });
+    const { data: rows, error: profileError } = await supabase.rpc(
+      "get_my_profile",
+      {
+        p_browser_token: localBrowserToken,
+      },
+    );
+
+    if (profileError) {
+      alert("引き継ぎは成功しましたが、プロフィール取得に失敗しました。リロードしてください。");
+      return false;
+    }
+
     const row = (
       rows as Array<{
         id: number;
@@ -375,13 +391,12 @@ const hasFavorites =
         color: string;
         favorite_book_id: string | null;
         favorite_note: string | null;
+        passphrase?: string | null;
       }> | null
     )?.[0];
 
     if (!row) {
-      alert(
-        "引き継ぎは成功しましたが、プロフィール取得に失敗しました。リロードしてください。",
-      );
+      alert("引き継ぎは成功しましたが、プロフィール取得に失敗しました。リロードしてください。");
       return false;
     }
 
@@ -390,72 +405,17 @@ const hasFavorites =
       color: row.color,
       favoriteBookId: row.favorite_book_id,
       favoriteNote: row.favorite_note,
-      passphrase: passphrase || null,
+      passphrase: trimmedPassphrase || null,
     };
 
     setMyProfileId(row.id);
     setProfile(transferredProfile);
-    localStorage.setItem(
-      "book-room-profile",
-      JSON.stringify(transferredProfile),
-    );
+    localStorage.setItem("book-room-profile", JSON.stringify(transferredProfile));
+    setTransferOpen(false);
+
+    alert("プロフィールを引き継ぎました。");
     return true;
   };
-
-    if (claimError) {
-      const msg = claimError.message ?? "";
-      if (msg.includes("profile_not_found") || msg.includes("name_mismatch")) {
-        alert("その名前のプロフィールは見つかりません");
-      } else if (msg.includes("invalid_passphrase")) {
-        alert("合言葉が一致しません");
-      } else if (msg.includes("profile_already_claimed")) {
-        alert("このプロフィールは既に他のブラウザで引き継ぎ済みです");
-      } else if (msg.includes("browser_already_has_profile")) {
-        alert(
-          "このブラウザは既に別のプロフィールを持っています。一度プロフィールをクリアしてからお試しください",
-        );
-      } else if (msg.includes("multiple_legacy_profiles_found")) {
-        alert("同名のプロフィールが複数あります。お問い合わせください");
-      } else {
-        alert(`引き継ぎに失敗しました: ${msg}`);
-      }
-      return;
-    }
-
-    if (typeof claimedId !== "number") return;
-
-  
-    const row = (
-      rows as Array<{
-        id: number;
-        name: string;
-        color: string;
-        favorite_book_id: string | null;
-        favorite_note: string | null;
-      }> | null
-    )?.[0];
-
-    if (!row) {
-      alert(
-        "引き継ぎは成功しましたが、プロフィール取得に失敗しました。リロードしてください。",
-      );
-      return;
-    }
-
-    const claimedProfile: UserProfile = {
-      name: row.name,
-      color: row.color,
-      favoriteBookId: row.favorite_book_id,
-      favoriteNote: row.favorite_note,
-      passphrase: passphrase || null,
-    };
-
-    setMyProfileId(row.id);
-    setProfile(claimedProfile);
-    localStorage.setItem("book-room-profile", JSON.stringify(claimedProfile));
-    setProfileDialogOpen(false);
-  };
-  
   // 「本を追加」ボタンからのエントリポイント。
   // プロフィール未設定のときは、先にプロフィール設定へ回して、
   // 保存が終わったら自動で AddBookDialog を開き直す。
