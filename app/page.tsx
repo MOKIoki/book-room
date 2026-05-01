@@ -410,10 +410,20 @@ const hasFavorites =
 
     setMyProfileId(row.id);
     setProfile(transferredProfile);
-    localStorage.setItem("book-room-profile", JSON.stringify(transferredProfile));
-    setTransferOpen(false);
+    localStorage.setItem(
+      "book-room-profile",
+      JSON.stringify(transferredProfile),
+    );
 
-    alert("プロフィールを引き継ぎました。");
+    // 新 profile に応じて isAdmin を再判定 (= ささ → 運営 に戻した時の即時反映)
+    const { data: adminFlag } = await supabase.rpc("am_i_admin", {
+      p_browser_token: localBrowserToken,
+    });
+    setIsAdmin(adminFlag === true);
+
+    // books を再取得して visibleBooks の再計算をトリガ
+    await loadAll({ silent: true });
+
     return true;
   };
   // 「本を追加」ボタンからのエントリポイント。
