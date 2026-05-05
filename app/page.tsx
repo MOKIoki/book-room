@@ -907,11 +907,13 @@ const createRoom = async (payload: {
       p_body: text,
     });
 
-    if (error) {
+   if (error) {
       console.error(error);
       const msg = error.message ?? "";
       if (msg.includes("rate_limited")) {
         alert("少し間をあけて投稿してください。");
+      } else if (msg.includes("room_is_hidden")) {
+        alert("この部屋は現在、投稿できません。");
       } else {
         alert("投稿に失敗しました");
       }
