@@ -909,7 +909,12 @@ const createRoom = async (payload: {
 
     if (error) {
       console.error(error);
-      alert("投稿に失敗しました");
+      const msg = error.message ?? "";
+      if (msg.includes("rate_limited")) {
+        alert("少し間をあけて投稿してください。");
+      } else {
+        alert("投稿に失敗しました");
+      }
       return;
     }
   };
@@ -1082,9 +1087,14 @@ const leaveTrace = async (body: string) => {
       p_body: body || null,
       p_from_name: profile?.name ?? null,
     });
-    if (error) {
+   if (error) {
       console.error(error);
-      alert("送信に失敗しました。");
+      const msg = error.message ?? "";
+      if (msg.includes("rate_limited")) {
+        alert("少し時間をおいてから、もう一度送ってください。");
+      } else {
+        alert("送信に失敗しました。");
+      }
       return;
     }
     alert("ご報告ありがとうございます。確認します。");
