@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { Book, ProfileRecord, UserProfile, Room } from "@/lib/types";
 import { Search, BookOpen, MessageSquare, Lock, DoorOpen, Mail } from "lucide-react";
 import {
@@ -487,6 +488,12 @@ export default function TopPage({
   <p className="mt-2 text-xs text-neutral-400">
     登録された本 {books.length}冊
   </p>
+  <Link
+  href="/books"
+  className="mt-2 inline-flex text-sm text-neutral-500 underline hover:text-neutral-800"
+>
+  本棚をのぞく →
+</Link>
 </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
