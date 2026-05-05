@@ -68,6 +68,7 @@ export default function Page() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [myProfileId, setMyProfileId] = useState<number | null>(null);
   const [localBrowserToken, setLocalBrowserToken] = useState<string | null>(null);
+  const [cameFromBooks, setCameFromBooks] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [pendingEntry, setPendingEntry] = useState<
     { bookId: string; roomId: number } | null
@@ -141,7 +142,14 @@ export default function Page() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
-
+// /books から ?from=books 付きで来た場合に、戻る挙動を /books に切り替える
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") === "books") {
+      setCameFromBooks(true);
+    }
+  }, []);
   // プロフィールが変わったら DB に upsert し、myProfileId を確定する。
   // マッチは name のみで行う(同名はいないという前提)。color や
   // passphrase は同じレコードに対して上書きする運用。
