@@ -74,7 +74,6 @@ export default function BooksPage() {
       rooms: [],
       traces: [],
     }));
-    );
     setBooks(merged);
     setLoading(false);
   };
