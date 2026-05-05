@@ -21,6 +21,7 @@ import NameSetupDialog from "@/components/dialogs/NameSetupDialog";
 // app/page.tsx と state は共有しない (= 多少の重複は許容、共通化しすぎない方針)。
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
+  const [activeRoomCounts, setActiveRoomCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
@@ -58,23 +59,41 @@ export default function BooksPage() {
   // books 一覧取得 (= rooms / traces は /books では不要なので空で埋める)
   const loadBooks = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("books")
-      .select("*")
-      .order("title", { ascending: true });
-    if (error) {
-      console.error(error);
+    const [booksRes, roomsRes] = await Promise.all([
+      supabase.from("books").select("*").order("title", { ascending: true }),
+      supabase.from("rooms").select("book_id, expires_at, hidden_at"),
+    ]);
+    if (booksRes.error) {
+      console.error(booksRes.error);
       setLoading(false);
       return;
     }
+    if (roomsRes.error) console.warn("rooms:", roomsRes.error);
+
     const merged: Book[] = (
-      (data ?? []) as Omit<Book, "rooms" | "traces">[]
+      (booksRes.data ?? []) as Omit<Book, "rooms" | "traces">[]
     ).map((b) => ({
       ...b,
       rooms: [],
       traces: [],
     }));
+
+    // 稼働中の部屋数を集計 (= 期限内 + hidden でない)
+    const now = Date.now();
+    const counts: Record<string, number> = {};
+    const rows = roomsRes.error ? [] : (roomsRes.data ?? []);
+    for (const r of rows as Array<{
+      book_id: string;
+      expires_at: string | null;
+      hidden_at: string | null;
+    }>) {
+      if (r.hidden_at !== null) continue;
+      if (r.expires_at !== null && new Date(r.expires_at).getTime() <= now) continue;
+      counts[r.book_id] = (counts[r.book_id] ?? 0) + 1;
+    }
+
     setBooks(merged);
+    setActiveRoomCounts(counts);
     setLoading(false);
   };
   useEffect(() => {
@@ -249,7 +268,7 @@ export default function BooksPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="text-sm text-neutral-500">
-                    この本のページへ
+                    稼働中の部屋 {activeRoomCounts[book.id] ?? 0} / 6
                   </CardContent>
                 </Card>
               </Link>
