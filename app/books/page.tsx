@@ -237,8 +237,8 @@ export default function BooksPage() {
           </div>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredBooks.map((book) => (
-              <Link key={book.id} href={`/b/${book.id}`} className="block">
+           {filteredBooks.map((book) => (
+              <Link key={book.id} href={`/b/${book.id}?from=books`} className="block">
                 <Card className="rounded-3xl shadow-sm hover:bg-neutral-50">
                   <CardHeader className="space-y-2 pl-5">
                     <CardTitle className="text-xl leading-7">
