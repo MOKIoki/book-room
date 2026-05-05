@@ -54,8 +54,10 @@ export default function ContactDialog({
 
         {done ? (
           <div className="space-y-4 py-2">
-            <div className="rounded-2xl bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-700">
-              送っていただきありがとうございます。必要に応じて対応します。
+           <div className="rounded-2xl bg-neutral-50 px-4 py-4 text-sm leading-6 text-neutral-700">
+              ありがとうございます。
+              いただいた内容は運営で確認し、必要に応じて今後の改善や運営判断の参考にします。
+              すべてのご要望に個別返信・対応できるわけではありません。
             </div>
             <DialogFooter>
               <Button
@@ -70,6 +72,7 @@ export default function ContactDialog({
           <div className="space-y-4 py-2">
             <div className="text-sm leading-6 text-neutral-600">
               気になることや不具合、この場への要望などがあれば書いてください。
+              すべてに個別返信できるわけではありませんが、運営で確認します。
             </div>
             <Textarea
               value={body}
