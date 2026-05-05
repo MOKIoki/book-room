@@ -265,7 +265,7 @@ function Section({
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="truncate text-xs text-neutral-500">
                     {book.title}
                   </div>
@@ -278,7 +278,7 @@ function Section({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="rounded-full"
+                    className="shrink-0 rounded-full"
                     onClick={() => onEnter(book.id, room.id)}
                   >
                     入る
