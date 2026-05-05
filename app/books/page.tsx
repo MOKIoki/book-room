@@ -67,13 +67,13 @@ export default function BooksPage() {
       setLoading(false);
       return;
     }
-    const merged: Book[] = (data ?? []).map(
-      (b: Record<string, unknown>) =>
-        ({
-          ...b,
-          rooms: [],
-          traces: [],
-        }) as Book,
+    const merged: Book[] = (
+      (data ?? []) as Omit<Book, "rooms" | "traces">[]
+    ).map((b) => ({
+      ...b,
+      rooms: [],
+      traces: [],
+    }));
     );
     setBooks(merged);
     setLoading(false);
