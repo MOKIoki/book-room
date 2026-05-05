@@ -1139,7 +1139,13 @@ const leaveTrace = async (body: string) => {
       {page.type === "book" && currentBook && (
         <BookPage
           book={currentBook}
-          onBack={() => setPage({ type: "top" })}
+          onBack={() => {
+            if (cameFromBooks) {
+              window.location.href = "/books";
+            } else {
+              setPage({ type: "top" });
+            }
+          }}
           onEnterRoom={(roomId) => handleEnterRoom(currentBook.id, roomId)}
           onCreateRoom={() => setCreateOpen(true)}
           onEditBook={() => {}}
