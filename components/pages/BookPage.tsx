@@ -342,15 +342,16 @@ export default function BookPage({
                 </span>
               )}
             </h2>
-            <Button
-              size="sm"
-              className="gap-1 rounded-2xl"
-              onClick={onCreateRoom}
-              disabled={roomLimitReached}
-            >
-              <Plus className="h-3 w-3" />
-              新しい部屋
-            </Button>
+           {visibleRooms.length > 0 && (
+                <Button
+                  className="gap-2 rounded-2xl"
+                  onClick={onCreateRoom}
+                  disabled={roomLimitReached}
+                >
+                  <Plus className="h-4 w-4" />
+                  部屋を作る
+                </Button>
+              )}
           </div>
 
           {roomLimitReached && (
