@@ -1227,7 +1227,7 @@ const leaveTrace = async (body: string) => {
       <MyLogDialog
         open={myLogOpen}
         onOpenChange={setMyLogOpen}
-        books={books}
+        books={visibleBooks}
         currentProfile={profile}
         myProfileId={myProfileId}
         lastSeenMap={lastSeenMap}
