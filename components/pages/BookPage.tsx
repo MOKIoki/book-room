@@ -342,14 +342,16 @@ export default function BookPage({
                 </span>
               )}
             </h2>
-           {visibleRooms.length > 0 && (
+          {book.rooms.some(
+                (r) => r.entry_type !== "welcome" && !isRoomExpired(r),
+              ) && (
                 <Button
                   className="gap-2 rounded-2xl"
                   onClick={onCreateRoom}
                   disabled={roomLimitReached}
                 >
                   <Plus className="h-4 w-4" />
-                  部屋を作る
+                  新しい部屋
                 </Button>
               )}
           </div>
