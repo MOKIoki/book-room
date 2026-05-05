@@ -648,7 +648,7 @@ const recentHeats = useMemo(() => {
     const myName = profile?.name;
     if (!myName) return [] as { bookId: string; roomId: number }[];
     const result: { bookId: string; roomId: number }[] = [];
-    books.forEach((book) => {
+    visibleBooks.forEach((book) => {
       book.rooms.forEach((room) => {
         if (isRoomExpired(room)) return;
         if (!room.messages.some((m) => m.user_name === myName)) return;
@@ -659,14 +659,14 @@ const recentHeats = useMemo(() => {
       });
     });
     return result;
-  }, [books, profile?.name, lastSeenMap]);
+  }, [visibleBooks, profile?.name, lastSeenMap]);
 
   // 24時間以内に開始する自分の予約があるか
   const hasReservationReminder = useMemo(() => {
     if (!myProfileId) return false;
     const now = Date.now();
     const within = 24 * 60 * 60 * 1000;
-    return books.some((book) =>
+    return visibleBooks.some((book) =>
       book.rooms.some((room) => {
         if (!room.scheduled_start_at) return false;
         const mine = room.reservations.some((r) => r.profile_id === myProfileId);
@@ -675,7 +675,7 @@ const recentHeats = useMemo(() => {
         return startMs > now && startMs - now <= within;
       }),
     );
-  }, [books, myProfileId]);
+  }, [visibleBooks, myProfileId]);
 
   // 部屋に入った瞬間に last-seen を更新
   useEffect(() => {
