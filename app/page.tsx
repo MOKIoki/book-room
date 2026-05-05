@@ -51,7 +51,8 @@ function pageToPath(p: PageState) {
 function parsePath(pathname: string): PageState {
   const m = pathname.match(/^\/b\/([^/]+)(?:\/r\/(\d+))?\/?$/);
   if (!m) return { type: "top" };
-  const [, bookId, roomIdStr] = m;
+  const [, rawBookId, roomIdStr] = m;
+  const bookId = decodeURIComponent(rawBookId);
   if (roomIdStr) return { type: "room", bookId, roomId: Number(roomIdStr) };
   return { type: "book", bookId };
 }
