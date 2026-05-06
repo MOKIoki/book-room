@@ -132,20 +132,22 @@ function RoomBadge({ room }: { room: Room }) {
   const EntryIcon = entryMap[room.entry_type].icon;
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
-      <Badge variant="outline" className="gap-1 rounded-full">
+      <Badge
+        variant="secondary"
+        className="gap-1 rounded-full bg-neutral-100 text-neutral-700"
+      >
         <EntryIcon className="h-3 w-3" />
         {entryMap[room.entry_type].label}
       </Badge>
       <Badge
-        variant={spoilerMap[room.spoiler].variant}
-        className="rounded-full"
+        variant="secondary"
+        className="rounded-full bg-neutral-100 text-neutral-700"
       >
         {spoilerMap[room.spoiler].label}
       </Badge>
     </div>
   );
 }
-
 type RecentHeat = {
   bookId: string;
   bookTitle: string;
