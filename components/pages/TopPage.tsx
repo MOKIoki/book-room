@@ -615,11 +615,6 @@ export default function TopPage({
             </p>
           </div>
         </details>
-
-          <div className="mt-3 text-xs text-neutral-500">
-            このサイトは試験公開中です。内容や機能は今後変わることがあります。
-          </div>
-        </div>
       </div>
     </div>
   );
