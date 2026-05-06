@@ -532,7 +532,7 @@ export default function TopPage({
           <div className="mt-6 text-right">
             <Link
               href="/books"
-              className="inline-flex text-sm text-neutral-500 underline hover:text-neutral-700"
+              className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-600 shadow-sm hover:bg-neutral-50"
             >
               本棚をのぞく →
             </Link>
