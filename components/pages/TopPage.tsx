@@ -233,17 +233,23 @@ export default function TopPage({
 // 本棚から「今日の4冊」: 登録本から日替わりで4冊を選ぶ
   // (= ランキング/おすすめではなく、偶然の入口)
   const todayBooks = useMemo(() => {
-    if (books.length === 0) return [] as typeof books;
-    if (books.length <= 4) return books;
-    const today = new Date();
-    const seed =
-      today.getFullYear() * 10000 +
-      (today.getMonth() + 1) * 100 +
-      today.getDate();
-    const startIdx = seed % books.length;
-    const rotated = [...books.slice(startIdx), ...books.slice(0, startIdx)];
-    return rotated.slice(0, 4);
-  }, [books]);
+  if (books.length === 0) return [] as typeof books;
+  if (books.length <= 4) return books;
+  const today = new Date();
+  const seed =
+    today.getFullYear() * 10000 +
+    (today.getMonth() + 1) * 100 +
+    today.getDate();
+  const startIdx = seed % books.length;
+  const rotated = [...books.slice(startIdx), ...books.slice(0, startIdx)];
+  return rotated.slice(0, 4);
+}, [books]);
+
+const spineBooks = useMemo(() => {
+  if (books.length <= 4) return [] as typeof books;
+  const todaySet = new Set(todayBooks.map((b) => b.id));
+  return books.filter((b) => !todaySet.has(b.id)).slice(0, 12);
+}, [books, todayBooks]);
   
   const activeRooms = useMemo(
     () =>
