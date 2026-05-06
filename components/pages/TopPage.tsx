@@ -502,37 +502,35 @@ export default function TopPage({
             </p>
           </div>
 
-          {todayBooks.length === 0 ? (
+{todayBooks.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-neutral-200 px-4 py-8 text-center text-sm text-neutral-500">
               まだ登録された本がありません。
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {todayBooks.map((book) => (
-                <Card key={book.id} className="rounded-3xl shadow-sm">
-                  <CardHeader className="space-y-2 pl-5">
-                    <CardTitle className="text-xl leading-7">
-                      <span>{book.title}</span>
-                    </CardTitle>
-                    <div className="text-sm text-neutral-500">{book.author}</div>
-                  </CardHeader>
-                  <CardContent>
-                    <Button
-                      className="rounded-full"
-                      onClick={() => onOpenBook(book.id)}
-                    >
-                      この本のページへ
-                    </Button>
-                  </CardContent>
-                </Card>
+                ...
               ))}
+            </div>
+          )}
+
+          {spineBooks.length > 0 && (
+            <div className="mt-6">
+              <div className="mb-2 text-xs text-neutral-400">本棚の背表紙</div>
+              <div className="flex max-h-12 flex-wrap gap-x-3 gap-y-1 overflow-hidden text-xs leading-5 text-neutral-400">
+                {spineBooks.map((b) => (
+                  <span key={b.id} className="max-w-[10rem] truncate">
+                    {b.title}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
           <div className="mt-6 text-right">
             <Link
               href="/books"
-              className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-600 shadow-sm hover:bg-neutral-50"
+              ...
             >
               本棚をのぞく →
             </Link>
