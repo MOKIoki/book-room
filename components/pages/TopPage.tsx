@@ -375,7 +375,7 @@ const spineBooks = useMemo(() => {
             </button>
           </div>
         </div>
-
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
         <Card className="relative overflow-hidden rounded-3xl border-0 shadow-sm">
             <div
               aria-hidden="true"
