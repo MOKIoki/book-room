@@ -587,37 +587,20 @@ export default function TopPage({
             </CardContent>
           </Card>
         </div>
-<div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
-  <div className="mb-3 font-medium text-neutral-900">book-room について</div>
-  <div className="space-y-3 text-sm leading-relaxed text-neutral-600">
-    <p>
-      ここは、本を読み終えたあとに残った感想やモヤモヤを、少しだけ置いていける場所です。
-    </p>
-    <p>
-      ひとりで閉じるには惜しい、あなたの読後の言葉を、本ごとの部屋や置き手紙として残しませんか。
-    </p>
-    <p>
-      運営者自身も、読後に誰かと少しだけ話したくなることがあり、この場所を作りました。
-    </p>
-    <p>
-      投稿内容や不具合の連絡には、必要に応じて確認・対応します。
-    </p>
-  </div>
-</div>
-        
-        <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
-          <div className="mb-2 font-medium text-neutral-900">この場の約束</div>
-          <div className="space-y-1 leading-6">
-            <div>ここは、本について少し話したい人のための場所です。</div>
-            <div>・本と関係のない宣伝や勧誘はご遠慮ください</div>
-            <div>
-              ・相手を傷つける言葉や、強い言い争いになりそうなやり取りは避けてください
-            </div>
-            <div>・ネタバレ範囲は部屋の表示に合わせてください</div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span>
-                ・気になることや不具合があれば、知らせてください。必要に応じて対応します
-              </span>
+<details className="mt-8 rounded-3xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600 shadow-sm">
+          <summary className="cursor-pointer font-medium text-neutral-900">
+            この場について
+          </summary>
+          <div className="mt-4 space-y-3 leading-6">
+            <p>book-roomは、読み終えた本について少し話す場所です。</p>
+            <p>部屋は一定期間で投稿受付が終わりますが、あとから読むことはできます。</p>
+            <p>閉じた部屋には、置き手紙としてひとことを残せます。</p>
+            <p>この場所は読了者向けです。内容や結末に触れる投稿があります。</p>
+            <p>本と関係のない宣伝や勧誘、強い言い争いになりそうなやり取りは避けてください。</p>
+            <p>
+              気になることや不具合があれば「管理人に伝える」から送れます。個別返信はできませんが、運営で確認します。
+            </p>
+            <div className="pt-2">
               <Button
                 variant="outline"
                 className="rounded-full"
@@ -627,7 +610,11 @@ export default function TopPage({
                 管理人に伝える
               </Button>
             </div>
+            <p className="pt-2 text-xs text-neutral-500">
+              ※試験公開中のため、内容や機能は今後変わることがあります。
+            </p>
           </div>
+        </details>
 
           <div className="mt-3 text-xs text-neutral-500">
             このサイトは試験公開中です。内容や機能は今後変わることがあります。
