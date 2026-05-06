@@ -639,5 +639,6 @@ const spineBooks = useMemo(() => {
           </div>
         </details>
       </div>
+    </div>
   );
 }
