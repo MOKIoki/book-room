@@ -479,78 +479,16 @@ export default function TopPage({
         </div>
 
         <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-           <div>
-  <h2 className="text-3xl font-semibold">本を開く、部屋がひらく</h2>
-  <p className="mt-1 text-neutral-500">
-    読んだ本について、少し話せる場所です。話題ごとに部屋を作ることもできます。
-  </p>
-  <p className="mt-2 text-xs text-neutral-400">
-    登録された本 {books.length}冊
-  </p>
-  <Link
-  href="/books"
-  className="mt-2 inline-flex text-sm text-neutral-500 underline hover:text-neutral-800"
->
-  本棚をのぞく →
-</Link>
-</div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative w-full sm:w-[360px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="本のタイトル・著者名で検索"
-                  className="rounded-full pl-9"
-                />
-              </div>
-
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={onOpenAddBook}
-              >
-                本を追加
-              </Button>
-            </div>
+          <div>
+            <h2 className="text-3xl font-semibold">本をひらく</h2>
+            <p className="mt-1 text-neutral-500">本を開く。部屋がひらく。</p>
+            <Link
+              href="/books"
+              className="mt-2 inline-flex text-sm text-neutral-500 underline hover:text-neutral-700"
+            >
+              本棚をのぞく →
+            </Link>
           </div>
-
-          {filteredBooks.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-neutral-200 px-4 py-8 text-center text-sm text-neutral-500">
-              該当する本がありません。
-            </div>
-          ) : (
-           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredBooks.map((book) => {
-                const activeCount = book.rooms.filter((r) => !isRoomExpired(r)).length;
-                return (
-                  <Card key={book.id} className="rounded-3xl shadow-sm">
-                    <CardHeader className="space-y-2 pl-5">
-                      <CardTitle className="flex min-w-0 items-center gap-2 text-xl leading-7">
-                      <span className="break-words">{book.title}</span>
-                       {isBookNew(book) && <NewMark />}
-                      </CardTitle>
-                      <div className="text-sm text-neutral-500">{book.author}</div>
-                    </CardHeader>
-
-                   <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                      <div className="text-sm text-neutral-500">
-                        稼働中の部屋 {activeCount} / 6
-                      </div>
-                      <Button
-                        className="rounded-full"
-                        onClick={() => onOpenBook(book.id)}
-                      >
-                        ひらく
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
         </div>
         <div className="mt-6">
           <Card className="rounded-3xl shadow-sm">
