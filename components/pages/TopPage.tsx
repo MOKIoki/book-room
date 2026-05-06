@@ -382,7 +382,7 @@ const spineBooks = useMemo(() => {
               className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-white/70" />
-            <CardHeader className="relative z-10 p-8">
+            <CardHeader className="relative z-10 px-8 pt-8 pb-6">
               <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm text-neutral-600">
                 <BookOpen className="h-4 w-4" />
                 同じ本を読んだ人と、少し話せる「book-room」
@@ -392,15 +392,11 @@ const spineBooks = useMemo(() => {
                 読んで、終われない β
               </CardTitle>
 
-              <CardDescription className="mt-6 max-w-2xl text-base leading-8 text-neutral-700">
+             <CardDescription className="mt-6 max-w-2xl text-base leading-8 text-neutral-700">
                 本を読んだあと、少し話したくなったときの場所です。
                 <br />
                 本を開くと、その本について短く話せる部屋に入れます。
               </CardDescription>
-
-              <div className="mt-10 text-xs text-neutral-500">
-                ※試験公開中・内容や機能は今後変わることがあります。
-              </div>
             </CardHeader>
           </Card>
 
@@ -522,8 +518,9 @@ const spineBooks = useMemo(() => {
                     </CardTitle>
                     <div className="text-sm text-neutral-500">{book.author}</div>
                   </CardHeader>
-                  <CardContent>
+                 <CardContent>
                     <Button
+                      variant="outline"
                       className="rounded-full"
                       onClick={() => onOpenBook(book.id)}
                     >
