@@ -376,14 +376,16 @@ const spineBooks = useMemo(() => {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <Card className="relative overflow-hidden rounded-3xl border-0 shadow-sm">
-            <img
-              src="/hero-book-bg.png"
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
+        <Card className="relative overflow-hidden rounded-3xl border-0 shadow-sm">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-no-repeat opacity-30"
+              style={{
+                backgroundImage: "url('/hero-book-bg.png')",
+                backgroundPosition: "right top",
+                backgroundSize: "auto 100%",
+              }}
             />
-            <div className="absolute inset-0 bg-white/70" />
             <CardHeader className="relative z-10 px-8 pt-8 pb-6">
               <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm text-neutral-600">
                 <BookOpen className="h-4 w-4" />
