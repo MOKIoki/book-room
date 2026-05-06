@@ -229,7 +229,22 @@ export default function TopPage({
         }),
     [books, query],
   );
-
+  
+// 本棚から「今日の4冊」: 登録本から日替わりで4冊を選ぶ
+  // (= ランキング/おすすめではなく、偶然の入口)
+  const todayBooks = useMemo(() => {
+    if (books.length === 0) return [] as typeof books;
+    if (books.length <= 4) return books;
+    const today = new Date();
+    const seed =
+      today.getFullYear() * 10000 +
+      (today.getMonth() + 1) * 100 +
+      today.getDate();
+    const startIdx = seed % books.length;
+    const rotated = [...books.slice(startIdx), ...books.slice(0, startIdx)];
+    return rotated.slice(0, 4);
+  }, [books]);
+  
   const activeRooms = useMemo(
     () =>
       books
@@ -479,12 +494,45 @@ export default function TopPage({
         </div>
 
         <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <div>
-            <h2 className="text-3xl font-semibold">本をひらく</h2>
-            <p className="mt-1 text-neutral-500">本を開く。部屋がひらく。</p>
+          <div className="mb-4">
+            <div className="text-sm text-neutral-500">本棚から</div>
+            <h2 className="text-3xl font-semibold">今日の4冊</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              登録された本の中から、日替わりで少しだけ並べています。
+            </p>
+          </div>
+
+          {todayBooks.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-neutral-200 px-4 py-8 text-center text-sm text-neutral-500">
+              まだ登録された本がありません。
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {todayBooks.map((book) => (
+                <Card key={book.id} className="rounded-3xl shadow-sm">
+                  <CardHeader className="space-y-2 pl-5">
+                    <CardTitle className="text-xl leading-7">
+                      <span>{book.title}</span>
+                    </CardTitle>
+                    <div className="text-sm text-neutral-500">{book.author}</div>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      className="rounded-full"
+                      onClick={() => onOpenBook(book.id)}
+                    >
+                      この本のページへ
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-6 text-right">
             <Link
               href="/books"
-              className="mt-2 inline-flex text-sm text-neutral-500 underline hover:text-neutral-700"
+              className="inline-flex text-sm text-neutral-500 underline hover:text-neutral-700"
             >
               本棚をのぞく →
             </Link>
