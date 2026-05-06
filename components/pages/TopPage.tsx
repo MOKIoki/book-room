@@ -537,13 +537,16 @@ const spineBooks = useMemo(() => {
 
           {spineBooks.length > 0 && (
             <div className="mt-6">
-              <div className="mb-2 text-xs text-neutral-400">本棚の背表紙</div>
+              <div className="mb-2 text-xs text-neutral-400">
+                ほかにも、こんな本があります
+              </div>
               <div className="flex max-h-12 flex-wrap gap-x-3 gap-y-1 overflow-hidden text-xs leading-5 text-neutral-400">
                 {spineBooks.map((b) => (
                   <span key={b.id} className="max-w-[10rem] truncate">
                     {b.title}
                   </span>
                 ))}
+                <span aria-hidden="true">…</span>
               </div>
             </div>
           )}
