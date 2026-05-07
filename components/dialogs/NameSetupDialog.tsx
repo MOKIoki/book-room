@@ -215,24 +215,28 @@ export default function NameSetupDialog({
             </Button>
           )}
           <Button
-            className="rounded-2xl w-full sm:w-auto"
-            onClick={async () => {
-              if (!name.trim()) {
-                alert("表示名を入力してください");
-                return;
-              }
-
-              onSave({
-                name: name.trim(),
-                color,
-                favoriteBookId: favoriteBookId || null,
-                favoriteNote: favoriteBookId ? favoriteNote.trim() || null : null,
-                passphrase: passphrase.trim() || null,
-              });
-            }}
-          >
-            {"保存する"}
-          </Button>
+   className="rounded-2xl w-full sm:w-auto"
+   onClick={async () => {
+     if (!name.trim()) {
+       alert("表示名を入力してください");
+       return;
+     }
+   const trimmedPassphrase = passphrase.trim();
+    if (trimmedPassphrase.length > 0 && trimmedPassphrase.length < 4) {
+      alert("合言葉は4文字以上で入力してください");
+      return;
+    }
+     onSave({
+       name: name.trim(),
+       color,
+       favoriteBookId: favoriteBookId || null,
+       favoriteNote: favoriteBookId ? favoriteNote.trim() || null : null,
+       passphrase: passphrase.trim() || null,
+     });
+   }}
+ >
+   {"保存する"}
+ </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
