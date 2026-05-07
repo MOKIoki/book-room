@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react"onOpenMyLog={() => setMyLogOpen(true)}
+import { Plus } from "lucide-react";
 
 
 
