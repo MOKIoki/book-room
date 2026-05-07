@@ -287,7 +287,7 @@ export default function RoomPage({
           </Button>
 
           <div className="flex items-center gap-2">
-            {isCreator && (
+            {isCreator && room.entry_type !== "welcome" && (
               <Button
                 variant="destructive"
                 className="rounded-2xl"
