@@ -1146,7 +1146,7 @@ const leaveTrace = async (body: string) => {
           onEnterActiveRoom={handleEnterRoom}
           currentProfile={profile}
           onOpenProfileSetting={() => setProfileDialogOpen(true)}
-          onOpenMyLog={() => setMyLogOpen(true)}
+          onOpenMyLog={handleOpenMyLog}
           onClearLocalProfile={clearLocalProfile}
           onOpenAddBook={handleOpenAddBook}
           onOpenContact={() => setContactOpen(true)}
@@ -1282,7 +1282,7 @@ const leaveTrace = async (body: string) => {
         currentProfile={profile}
         unreadCount={myUnreadRooms.length}
         hasReminder={hasReservationReminder}
-        onOpenMyLog={() => setMyLogOpen(true)}
+        onOpenMyLog={handleOpenMyLog}
         onOpenProfileSetting={() => setProfileDialogOpen(true)}
         onClearLocalProfile={clearLocalProfile}
         onOpenContact={() => setContactOpen(true)}
