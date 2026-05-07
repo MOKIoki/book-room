@@ -700,7 +700,28 @@ const recentHeats = useMemo(() => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
+const handleOpenMyLog = () => {
+  if (myUnreadRooms.length > 0) {
+    const now = new Date().toISOString();
+    const nextMap = { ...lastSeenMap };
 
+    myUnreadRooms.forEach(({ roomId }) => {
+      nextMap[roomId] = now;
+    });
+
+    setLastSeenMap(nextMap);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        "book-room-last-seen",
+        JSON.stringify(nextMap),
+      );
+    }
+  }
+
+  setMyLogOpen(true);
+};
+  
   // お問い合わせ送信。成功したらダイアログがサンキュー表示に切り替わる。
   const submitContact = async (body: string) => {
 // C1: contacts 直接 INSERT を send_contact_as_anon RPC に置換。
