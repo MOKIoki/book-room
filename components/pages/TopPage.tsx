@@ -306,7 +306,7 @@ const spineBooks = useMemo(() => {
     : favoriteProfiles.slice(0, 2);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-50 text-neutral-900">
+    <div className="min-h-screen w-full overflow-x-hidden bg-stone-100/80 text-neutral-900">
       <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
           <div className="sm:hidden">
