@@ -28,6 +28,7 @@ type NameSetupDialogProps = {
   initialFavoriteBookId?: string | null;
   initialFavoriteNote?: string | null;
   initialPassphrase?: string | null;
+  isExistingProfile?: boolean;
   books: Book[];
   onSave: (profile: UserProfile) => void;
   onClose?: () => void;
@@ -35,13 +36,14 @@ type NameSetupDialogProps = {
   onRequestTransfer?: () => void;
 };
 
-export default function NameSetupDialog({
+export function NameSetupDialog({
   open,
   initialName,
   initialColor,
   initialFavoriteBookId,
   initialFavoriteNote,
   initialPassphrase,
+  isExistingProfile = false,
   books,
   onSave,
   onClose,
