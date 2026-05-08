@@ -393,16 +393,16 @@ const spineBooks = useMemo(() => {
   本を開くと、その本について短く話せる部屋に入れます。
 </CardDescription>
 </CardHeader>
-        <a
-  href="https://movie-room-bice.vercel.app/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="absolute bottom-8 right-8 rounded-full px-3 py-2 text-sm text-neutral-400 transition hover:text-neutral-600"
->
-
-  映画を見たらこちら →
-
-</a>
+        <div className="flex justify-end px-8 pb-6 sm:block sm:p-0">
+  <a
+    href="https://movie-room-bice.vercel.app/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="rounded-full px-3 py-2 text-sm text-neutral-400 transition hover:text-neutral-600 sm:absolute sm:bottom-8 sm:right-8"
+  >
+    映画を見たらこちら →
+  </a>
+</div>
           </Card>
 
           <Card className="rounded-3xl shadow-sm">
