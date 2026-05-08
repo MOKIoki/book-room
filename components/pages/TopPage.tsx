@@ -387,12 +387,23 @@ const spineBooks = useMemo(() => {
                 読んで、終われない β
               </CardTitle>
 
-             <CardDescription className="mt-6 max-w-2xl text-base leading-8 text-neutral-700">
-                本を読んだあと、少し話したくなったときの場所です。
-                <br />
-                本を開くと、その本について短く話せる部屋に入れます。
-              </CardDescription>
-            </CardHeader>
+            <CardDescription className="mt-6 max-w-2xl text-base leading-8 text-neutral-700">
+  本を読んだあと、少し話したくなったときの場所です。
+  <br />
+  本を開くと、その本について短く話せる部屋に入れます。
+</CardDescription>
+
+<div className="mt-8 flex justify-end">
+  <a
+    href="https://movie-room-bice.vercel.app/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="rounded-full px-3 py-2 text-sm text-neutral-400 transition hover:text-neutral-600"
+  >
+    映画を見たらこちら →
+  </a>
+</div>
+</CardHeader>
           </Card>
 
           <Card className="rounded-3xl shadow-sm">
