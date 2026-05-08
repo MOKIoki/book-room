@@ -101,22 +101,26 @@ export default function MyLogDialog({
   }, [allPairs, myName]);
 
   const unread: RoomWithBook[] = useMemo(
-    () =>
-      participated
-        .filter(({ room }) => !isRoomExpired(room))
-        .filter(({ room }) => {
-          const seen = lastSeenMap[room.id];
-          if (!seen) return true;
-          return new Date(room.updated_at).getTime() > new Date(seen).getTime();
-        })
-        .sort(
-          (a, b) =>
-            new Date(b.room.updated_at).getTime() -
-            new Date(a.room.updated_at).getTime(),
-        ),
-    [participated, lastSeenMap],
-  );
-
+  () =>
+    participated
+      .filter(({ room }) => !isRoomExpired(room))
+      .filter(({ room }) => {
+        if (!myName) return false;
+        const seen = lastSeenMap[room.id];
+        return room.messages.some(
+          (m) =>
+            m.user_name !== myName &&
+            (!seen ||
+              new Date(m.created_at).getTime() > new Date(seen).getTime()),
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.room.updated_at).getTime() -
+          new Date(a.room.updated_at).getTime(),
+      ),
+  [participated, lastSeenMap, myName],
+);
   const ongoing: RoomWithBook[] = useMemo(
     () =>
       participated
