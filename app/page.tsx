@@ -322,8 +322,20 @@ const hasFavorites =
   }, [localBrowserToken]);
   
   const saveProfile = (nextProfile: UserProfile) => {
-    setProfile(nextProfile);
-    localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
+  const existingProfile = profiles.find((p) => p.name === nextProfile.name);
+
+  if (
+    existingProfile &&
+    (myProfileId === null || existingProfile.id !== myProfileId)
+  ) {
+    alert(
+      "この名前はすでに使われています。前に使ったプロフィールがある場合は、上の「引き継ぐ」から戻れます。",
+    );
+    return;
+  }
+
+  setProfile(nextProfile);
+  localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
     if (pendingEntry) {
       setPage({
         type: "room",
