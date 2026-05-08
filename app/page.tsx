@@ -205,30 +205,46 @@ export default function Page() {
       }
 
       if (existing) {
-        setMyProfileId(existing.id);
-        const nextColor = profile.color;
-        const nextFavBook = profile.favoriteBookId ?? null;
-        const nextFavNote = profile.favoriteNote ?? null;
-        const nextPassphrase = profile.passphrase ?? null;
-// P2/P3 削除後: token 経路のみ。常に RPC で UPDATE (idempotent)。
-        const { error: updateError } = await supabase.rpc(
-          "update_profile_as_owner",
-          {
-            p_profile_id: existing.id,
-            p_browser_token: localBrowserToken,
-            p_passphrase: null,
-            p_new_name: profile.name,
-            p_new_color: nextColor,
-            p_new_favorite_book_id: nextFavBook,
-            p_new_favorite_note: nextFavNote,
-            p_new_passphrase: nextPassphrase ?? null,
-          },
-        );
-        if (updateError) {
-          console.error("update_profile_as_owner failed:", updateError);
-        }
-        return;
-      }
+  const nextColor = profile.color;
+  const nextFavBook = profile.favoriteBookId ?? null;
+  const nextFavNote = profile.favoriteNote ?? null;
+  const nextPassphrase = profile.passphrase ?? null;
+
+  const { error: updateError } = await supabase.rpc(
+    "update_profile_as_owner",
+    {
+      p_profile_id: existing.id,
+      p_browser_token: localBrowserToken,
+      p_passphrase: null,
+      p_new_name: profile.name,
+      p_new_color: nextColor,
+      p_new_favorite_book_id: nextFavBook,
+      p_new_favorite_note: nextFavNote,
+      p_new_passphrase: nextPassphrase ?? null,
+    },
+  );
+
+  if (updateError) {
+    console.error("update_profile_as_owner failed:", updateError);
+    localStorage.removeItem("book-room-profile");
+    setProfile(null);
+    setMyProfileId(null);
+
+    const msg = updateError.message ?? "";
+    if (msg.includes("not_profile_owner")) {
+      alert("この名前のプロフィールはすでに使われています。引き継ぎから合言葉で入ってください。");
+    } else if (msg.includes("name_already_exists")) {
+      alert("この名前はすでに使われています。別の名前にしてください。");
+    } else {
+      alert(`プロフィールの保存に失敗しました: ${msg}`);
+    }
+
+    return;
+  }
+
+  setMyProfileId(existing.id);
+  return;
+}
 
 // Step 3: 直接 INSERT を create_profile RPC に置換。
       // create_profile は (name, color, browser_token, passphrase) を受け取り、
