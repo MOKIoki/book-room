@@ -196,8 +196,8 @@ export default function BooksPage() {
     };
 
     setAddBookOpen(false);
-    // 作成された部屋に直接遷移 (= /books は別ページなので full navigation)
-    window.location.href = `/b/${result.book_id}/r/${result.room_id}`;
+// 作成された部屋に直接遷移（= /books は別ページなので full navigation）
+window.location.href = `/b/${result.book_id}/r/${result.room_id}?from=books`;
   };
 
   // プロフィール保存 (= NameSetupDialog onSave)
