@@ -105,9 +105,6 @@ export default function AddBookDialog({
                 className="rounded-2xl"
               />
             </div>
-            <p className="text-xs text-neutral-500">
-              本の説明などは後からでも編集できます。
-            </p>
           </div>
         ) : (
           <div className="space-y-4 py-2">
