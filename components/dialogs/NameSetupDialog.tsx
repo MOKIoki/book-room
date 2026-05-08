@@ -227,10 +227,22 @@ export function NameSetupDialog({
        return;
      }
    const trimmedPassphrase = passphrase.trim();
-    if (trimmedPassphrase.length > 0 && trimmedPassphrase.length < 4) {
-      alert("合言葉は4文字以上で入力してください");
-      return;
-    }
+
+if (!isExistingProfile) {
+  if (!trimmedPassphrase) {
+    alert("合言葉を入力してください。4文字以上で設定してください。");
+    return;
+  }
+  if (trimmedPassphrase.length < 4) {
+    alert("合言葉は4文字以上で入力してください");
+    return;
+  }
+} else {
+  if (trimmedPassphrase && trimmedPassphrase.length < 4) {
+    alert("合言葉は4文字以上で入力してください");
+    return;
+  }
+}
      onSave({
        name: name.trim(),
        color,
