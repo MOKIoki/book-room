@@ -36,7 +36,7 @@ type NameSetupDialogProps = {
   onRequestTransfer?: () => void;
 };
 
-export function NameSetupDialog({
+export default function NameSetupDialog({
   open,
   initialName,
   initialColor,
