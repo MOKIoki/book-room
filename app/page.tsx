@@ -1304,6 +1304,7 @@ const leaveTrace = async (body: string) => {
   initialFavoriteBookId={profile?.favoriteBookId ?? null}
   initialFavoriteNote={profile?.favoriteNote ?? null}
   initialPassphrase={profile?.passphrase ?? null}
+  isExistingProfile={myProfileId !== null}
   books={books}
   onSave={saveProfile}
   onClose={() => {
@@ -1311,10 +1312,10 @@ const leaveTrace = async (body: string) => {
     setPendingEntry(null);
   }}
   onRequestAddBook={() => setAddBookOpen(true)}
-onRequestTransfer={() => {
-  setProfileDialogOpen(false);
-  setTransferOpen(true);
-}}
+  onRequestTransfer={() => {
+    setProfileDialogOpen(false);
+    setTransferOpen(true);
+  }}
 />
       <TransferProfileDialog
         open={transferOpen}
