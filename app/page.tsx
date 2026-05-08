@@ -221,7 +221,7 @@ export default function Page() {
             p_new_color: nextColor,
             p_new_favorite_book_id: nextFavBook,
             p_new_favorite_note: nextFavNote,
-            p_new_passphrase: nextPassphrase ?? "",
+            p_new_passphrase: nextPassphrase ?? null,
           },
         );
         if (updateError) {
