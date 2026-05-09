@@ -691,28 +691,32 @@ const recentHeats = useMemo(() => {
 // 自分が書き込んでいて、最終閲覧以降に他人の投稿がある未期限切れの部屋
 const myUnreadRooms = useMemo(() => {
   const myName = profile?.name;
-  if (!myName) return [] as { bookId: string; roomId: number }[];
+const myId = myProfileId;
+if (!myName && myId === null) return [] as { bookId: string; roomId: number }[];
+const isMine = (m: { user_name: string; profile_id?: number | null }) =>
+  (myId !== null && m.profile_id === myId) ||
+  (m.profile_id == null && !!myName && m.user_name === myName);
   const result: { bookId: string; roomId: number }[] = [];
   visibleBooks.forEach((book) => {
     book.rooms.forEach((room) => {
       if (isRoomExpired(room)) return;
       // 自分が投稿したことがある部屋のみ対象
-      if (!room.messages.some((m) => m.user_name === myName)) return;
+      if (!room.messages.some((m) => isMine(m))) return;
       const seen = lastSeenMap[room.id];
       // 最終閲覧後に他人の投稿がある場合だけ未読扱いにする
       const hasOtherNewMessage = room.messages.some(
-        (m) =>
-          m.user_name !== myName &&
-          (!seen ||
-            new Date(m.created_at).getTime() > new Date(seen).getTime()),
-      );
+  (m) =>
+    !isMine(m) &&
+    (!seen ||
+      new Date(m.created_at).getTime() > new Date(seen).getTime()),
+);
       if (hasOtherNewMessage) {
         result.push({ bookId: book.id, roomId: room.id });
       }
     });
   });
   return result;
-}, [visibleBooks, profile?.name, lastSeenMap]);
+}, [visibleBooks, profile?.name, myProfileId, lastSeenMap]);
 
   // 24時間以内に開始する自分の予約があるか
   const hasReservationReminder = useMemo(() => {
