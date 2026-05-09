@@ -203,7 +203,15 @@ export default function Page() {
           };
         }
       }
-
+      if (!existing && myProfileId !== null) {
+        existing = {
+          id: myProfileId,
+          color: profile.color,
+          favorite_book_id: profile.favoriteBookId ?? null,
+          favorite_note: profile.favoriteNote ?? null,
+          passphrase: profile.passphrase ?? null,
+        };
+      }
       if (existing) {
   const nextColor = profile.color;
   const nextFavBook = profile.favoriteBookId ?? null;
@@ -215,7 +223,7 @@ export default function Page() {
     {
       p_profile_id: existing.id,
       p_browser_token: localBrowserToken,
-      p_passphrase: null,
+      p_passphrase: nextPassphrase,
       p_new_name: profile.name,
       p_new_color: nextColor,
       p_new_favorite_book_id: nextFavBook,
