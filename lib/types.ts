@@ -2,6 +2,7 @@ export type Message = {
   id: number;
   room_id: number;
   user_name: string;
+  profile_id: number | null;
   user_color: string;
   text: string;
   created_at: string;
