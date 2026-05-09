@@ -92,24 +92,28 @@ export default function MyLogDialog({
         return am - bm;
       });
   }, [allPairs, myProfileId]);
+const myId = myProfileId;
 
+const isMine = (m: { user_name: string; profile_id?: number | null }) =>
+  (myId !== null && m.profile_id === myId) ||
+  (m.profile_id == null && !!myName && m.user_name === myName);
   const participated: RoomWithBook[] = useMemo(() => {
-    if (!myName) return [];
+    if (!myName && myId === null) return [];
     return allPairs.filter(({ room }) =>
-      room.messages.some((m) => m.user_name === myName),
+      room.messages.some((m) => isMine(m)),
     );
-  }, [allPairs, myName]);
+  }, [allPairs, myName, myId]);
 
   const unread: RoomWithBook[] = useMemo(
   () =>
     participated
       .filter(({ room }) => !isRoomExpired(room))
       .filter(({ room }) => {
-        if (!myName) return false;
+        if (!myName && myId === null) return false;
         const seen = lastSeenMap[room.id];
         return room.messages.some(
           (m) =>
-            m.user_name !== myName &&
+            !isMine(m) &&
             (!seen ||
               new Date(m.created_at).getTime() > new Date(seen).getTime()),
         );
@@ -119,7 +123,7 @@ export default function MyLogDialog({
           new Date(b.room.updated_at).getTime() -
           new Date(a.room.updated_at).getTime(),
       ),
-  [participated, lastSeenMap, myName],
+ [participated, lastSeenMap, myName, myId],
 );
   const ongoing: RoomWithBook[] = useMemo(
     () =>
