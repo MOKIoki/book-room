@@ -380,7 +380,7 @@ const spineBooks = useMemo(() => {
             <CardHeader className="relative z-10 px-8 pt-8 pb-6">
               <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm text-neutral-600">
                 <BookOpen className="h-4 w-4" />
-                本を閉じて、book-room
+                本を置いて、book-room
               </div>
 
               <CardTitle className="text-4xl font-semibold tracking-tight sm:text-5xl">
