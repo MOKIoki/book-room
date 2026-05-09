@@ -69,7 +69,11 @@ export default function MyLogDialog({
   onEnterRoom,
 }: MyLogDialogProps) {
   const myName = currentProfile?.name ?? null;
+  const myId = myProfileId;
 
+  const isMine = (m: { user_name: string; profile_id?: number | null }) =>
+    (myId !== null && m.profile_id === myId) ||
+    (m.profile_id == null && !!myName && m.user_name === myName);
   const allPairs: RoomWithBook[] = useMemo(
     () => books.flatMap((book) => book.rooms.map((room) => ({ book, room }))),
     [books],
