@@ -390,7 +390,7 @@ const spineBooks = useMemo(() => {
             <CardDescription className="mt-6 max-w-2xl text-base leading-8 text-neutral-700">
   本を読んだあと、少し話したくなったときの場所です。
   <br />
-  本を開くと、その本について短く話せる部屋に入れます。
+  本を開くと、その本について話せる部屋に入れます。
 </CardDescription>
 </CardHeader>
         <div className="flex justify-end px-8 pb-6 sm:block sm:p-0">
