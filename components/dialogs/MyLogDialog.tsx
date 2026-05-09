@@ -96,11 +96,7 @@ export default function MyLogDialog({
         return am - bm;
       });
   }, [allPairs, myProfileId]);
-const myId = myProfileId;
 
-const isMine = (m: { user_name: string; profile_id?: number | null }) =>
-  (myId !== null && m.profile_id === myId) ||
-  (m.profile_id == null && !!myName && m.user_name === myName);
   const participated: RoomWithBook[] = useMemo(() => {
     if (!myName && myId === null) return [];
     return allPairs.filter(({ room }) =>
