@@ -215,17 +215,26 @@ export default function RoomPage({
   );
   const reservationCount = room.reservations.length;
   const reservationFull = reservationCount >= RESERVATION_CAPACITY;
-
   const expiresMs = room.expires_at ? new Date(room.expires_at).getTime() : null;
   const inFinalHour =
     expiresMs !== null &&
     expiresMs - Date.now() <= 60 * 60 * 1000 &&
     expiresMs > Date.now();
   // X9: 終了済み判定 + 既存 trace 検出 (existingTrace は後続ターンで使用)
-  const isExpired = expiresMs !== null && expiresMs <= Date.now();
-  const isHidden = !!room.hidden_at;
-  const isExpired
-    const channel = supabase.channel(`presence-room-${room.id}`);
+const isExpired = expiresMs !== null && expiresMs <= Date.now();
+const isHidden = !!room.hidden_at;
+const existingTrace =
+  book.traces?.find((t) => t.room_id === room.id) ?? null;
+const isWelcomeRoom = room.entry_type === "welcome";
+const canSeeTraceSection =
+  !isWelcomeRoom && (isCreator || existingTrace);
+const canLeaveTrace =
+  !existingTrace &&
+  !isWelcomeRoom &&
+  isCreator &&
+  isExpired;
+  // Presence
+const channel = supabase.channel(`presence-room-${room.id}`);
     channel
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
