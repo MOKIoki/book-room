@@ -224,10 +224,7 @@ export default function RoomPage({
   // X9: 終了済み判定 + 既存 trace 検出 (existingTrace は後続ターンで使用)
   const isExpired = expiresMs !== null && expiresMs <= Date.now();
   const isHidden = !!room.hidden_at;
-  const existingTrace =
-    book.traces?.find((t) => t.room_id === room.id) ?? null;
-    // Presence
-  useEffect(() => {
+  const isExpired
     const channel = supabase.channel(`presence-room-${room.id}`);
     channel
       .on("presence", { event: "sync" }, () => {
@@ -524,8 +521,7 @@ export default function RoomPage({
             </div>
           </CardContent>
         </Card>
-
-{!isBeforeStart && (
+{!isBeforeStart && canSeeTraceSection && (
           <Card className="mt-6 rounded-3xl border-0 shadow-sm">
             <button
               type="button"
@@ -554,39 +550,43 @@ export default function RoomPage({
             </button>
             {traceOpen && (
               <CardContent>
-                {existingTrace ? (
-                  /* X9: 既存 trace 表示 (= 1 部屋 1 trace UNIQUE、再投稿不可) */
-                  <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
-                    <div className="text-sm leading-6 text-neutral-800">
-                      「{existingTrace.body}」
-                    </div>
-                    <div className="mt-2 text-xs text-neutral-500">
-                      — {existingTrace.created_by_name ?? "匿名"} ・{" "}
-                      {formatRelativeTime(existingTrace.created_at)}
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                     <div className="mb-2 text-sm text-neutral-500">
-                      部屋の終了後に、本のページへ短い置き手紙として残ります。
-                    </div>
-                    <Textarea
-                      value={traceDraft}
-                      onChange={(e) => setTraceDraft(e.target.value)}
-                      placeholder="次に読む人へ、短い一言をどうぞ。"
-                      className="min-h-[88px] rounded-2xl"
-                    />
-                    <div className="mt-2 flex justify-end">
-                      <Button
-                        className="rounded-2xl"
-                        onClick={submitTrace}
-                        disabled={tracing || !traceDraft.trim()}
-                      >
-                        残す
-                      </Button>
-                    </div>
-                  </>
-                )}
+               {existingTrace ? (
+  /* X9: 既存 trace 表示（= 1 部屋 1 trace UNIQUE、再投稿不可） */
+  <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+    <div className="text-sm leading-6 text-neutral-800">
+      {existingTrace.body}
+    </div>
+    <div className="mt-2 text-xs text-neutral-500">
+      {existingTrace.created_by_name ?? "匿名"} ・{" "}
+      {formatRelativeTime(existingTrace.created_at)}
+    </div>
+  </div>
+) : canLeaveTrace ? (
+  <>
+    <div className="mb-2 text-sm text-neutral-500">
+      部屋の終了後に、本のページへ短い置き手紙として残ります。
+    </div>
+    <Textarea
+      value={traceDraft}
+      onChange={(e) => setTraceDraft(e.target.value)}
+      placeholder="次に読む人へ、短い一言をどうぞ。"
+      className="min-h-[88px] rounded-2xl"
+    />
+    <div className="mt-2 flex justify-end">
+      <Button
+        className="rounded-2xl"
+        onClick={submitTrace}
+        disabled={tracing || !traceDraft.trim()}
+      >
+        残す
+      </Button>
+    </div>
+  </>
+) : (
+  <div className="text-sm text-neutral-500">
+    この部屋が閉じたあと、置き手紙を残せます。
+  </div>
+)}
               </CardContent>
             )}
           </Card>
