@@ -233,26 +233,27 @@ const canLeaveTrace =
   !isWelcomeRoom &&
   isCreator &&
   isExpired;
-  // Presence
-const channel = supabase.channel(`presence-room-${room.id}`);
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        setPresenceCount(Object.keys(state).length);
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({
-            name: currentProfile?.name ?? "ゲスト",
-            at: new Date().toISOString(),
-          });
-        }
-      });
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room.id, currentProfile?.name]);
+// Presence
+useEffect(() => {
+  const channel = supabase.channel(`presence-room-${room.id}`);
+  channel
+    .on("presence", { event: "sync" }, () => {
+      const state = channel.presenceState();
+      setPresenceCount(Object.keys(state).length);
+    })
+    .subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await channel.track({
+          name: currentProfile?.name ?? "ゲスト",
+          at: new Date().toISOString(),
+        });
+      }
+    });
 
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [room.id, currentProfile?.name]);
   // Auto-scroll on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
