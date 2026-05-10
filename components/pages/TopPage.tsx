@@ -456,7 +456,7 @@ const spineBooks = useMemo(() => {
             <CardHeader>
               <CardTitle>語らいの置き手紙</CardTitle>
               <CardDescription>
-                読み終えた人の余韻
+                部屋を作った人だけが残せる一言です
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
