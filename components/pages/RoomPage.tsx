@@ -471,12 +471,6 @@ useEffect(() => {
                           <span className={`font-medium ${colorStyle.name}`}>
                             {m.user_name}
                           </span>
-                          <span className="text-neutral-400">
-                            {new Date(m.created_at).toLocaleTimeString("ja-JP", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
                         </div>
                         <div
                           className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-3 leading-7 ${colorStyle.bubble}`}
