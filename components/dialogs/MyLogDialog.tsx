@@ -125,6 +125,32 @@ export default function MyLogDialog({
       ),
  [participated, lastSeenMap, myName, myId],
 );
+  const traceReady: RoomWithBook[] = useMemo(
+  () =>
+    allPairs
+      .filter(({ room }) => room.entry_type !== "welcome")
+      .filter(({ room }) => isRoomExpired(room))
+      .filter(
+        ({ room }) =>
+          myProfileId !== null && room.created_by_profile_id === myProfileId,
+      )
+      .filter(
+        ({ book, room }) =>
+          !book.traces?.some((trace) => trace.room_id === room.id),
+      )
+      .filter(({ room }) => {
+        if (!room.expires_at) return false;
+        const seen = lastSeenMap[room.id];
+        if (!seen) return true;
+        return new Date(seen).getTime() < new Date(room.expires_at).getTime();
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.room.expires_at ?? 0).getTime() -
+          new Date(a.room.expires_at ?? 0).getTime(),
+      ),
+  [allPairs, myProfileId, lastSeenMap],
+);
   const ongoing: RoomWithBook[] = useMemo(
     () =>
       participated
@@ -197,7 +223,39 @@ export default function MyLogDialog({
                 </span>
               )}
             />
+<section className="space-y-3">
+  <h3 className="text-sm font-semibold text-stone-700">
+    置き手紙を書ける部屋
+  </h3>
 
+  {traceReady.length === 0 ? (
+    <p className="text-sm text-stone-500">
+      置き手紙を書ける部屋はありません。
+    </p>
+  ) : (
+    <div className="space-y-2">
+      {traceReady.map(({ book, room }) => (
+        <button
+          key={room.id}
+          type="button"
+          onClick={() => {
+            onClose();
+            onOpenRoom(book.id, room.id);
+          }}
+          className="w-full rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-left transition hover:border-amber-300 hover:bg-amber-50"
+        >
+          <p className="text-xs text-amber-700">
+            部屋が閉じました。置き手紙を書けます。
+          </p>
+          <p className="mt-1 text-sm font-semibold text-stone-800">
+            {room.title}
+          </p>
+          <p className="mt-1 text-xs text-stone-500">{book.title}</p>
+        </button>
+      ))}
+    </div>
+  )}
+</section>
             <Section
               title="参加中の部屋"
               empty="現在参加中の部屋はありません。"
