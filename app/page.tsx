@@ -717,7 +717,33 @@ const isMine = (m: { user_name: string; profile_id?: number | null }) =>
   });
   return result;
 }, [visibleBooks, profile?.name, myProfileId, lastSeenMap]);
+  const myTraceReadyRooms = useMemo(() => {
+    const myId = myProfileId;
+    if (myId === null) return [] as { bookId: string; roomId: number }[];
 
+    const result: { bookId: string; roomId: number }[] = [];
+
+    visibleBooks.forEach((book) => {
+      book.rooms.forEach((room) => {
+        if (room.entry_type === "welcome") return;
+        if (!isRoomExpired(room)) return;
+        if (room.created_by_profile_id !== myId) return;
+        if (book.traces?.some((trace) => trace.room_id === room.id)) return;
+        if (!room.expires_at) return;
+
+        const seen = lastSeenMap[room.id];
+
+        if (
+          !seen ||
+          new Date(seen).getTime() < new Date(room.expires_at).getTime()
+        ) {
+          result.push({ bookId: book.id, roomId: room.id });
+        }
+      });
+    });
+
+    return result;
+  }, [visibleBooks, myProfileId, lastSeenMap]);
   // 24時間以内に開始する自分の予約があるか
   const hasReservationReminder = useMemo(() => {
     if (!myProfileId) return false;
@@ -1328,7 +1354,7 @@ const leaveTrace = async (body: string) => {
         open={profileMenuOpen}
         onOpenChange={setProfileMenuOpen}
         currentProfile={profile}
-        unreadCount={myUnreadRooms.length}
+        unreadCount={myUnreadRooms.length + myTraceReadyRooms.length}
         hasReminder={hasReservationReminder}
         onOpenMyLog={handleOpenMyLog}
         onOpenProfileSetting={() => setProfileDialogOpen(true)}
