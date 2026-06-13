@@ -63,6 +63,9 @@ export default function Page() {
   const [page, setPageState] = useState<PageState>({ type: "top" });
   const [createOpen, setCreateOpen] = useState(false);
   const [addBookOpen, setAddBookOpen] = useState(false);
+const [addBookIntent, setAddBookIntent] = useState<"normal" | "favorite">(
+  "normal",
+);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -474,14 +477,17 @@ const hasFavorites =
   // 「本を追加」ボタンからのエントリポイント。
   // プロフィール未設定のときは、先にプロフィール設定へ回して、
   // 保存が終わったら自動で AddBookDialog を開き直す。
-  const handleOpenAddBook = () => {
-    if (!profile) {
-      setPendingAddBook(true);
-      setProfileDialogOpen(true);
-      return;
-    }
-    setAddBookOpen(true);
-  };
+const handleOpenAddBook = (intent: "normal" | "favorite" = "normal") => {
+  setAddBookIntent(intent);
+
+  if (!profile) {
+    setPendingAddBook(true);
+    setProfileDialogOpen(true);
+    return;
+  }
+
+  setAddBookOpen(true);
+};
 
   const clearLocalProfile = () => {
     localStorage.removeItem("book-room-profile");
@@ -881,14 +887,49 @@ if (createError || !created) {
       message_id: number | null;
     };
 
-    setAddBookOpen(false);
-    await loadAll({ silent: true });
-    setPage({
-      type: "room",
-      bookId: result.book_id,
-      roomId: result.room_id,
-    });
-  };
+const shouldReturnToProfile = addBookIntent === "favorite";
+
+if (shouldReturnToProfile) {
+  const { error: favoriteError } = await supabase.rpc(
+    "update_profile_as_owner",
+    {
+      p_profile_id: myProfileId,
+      p_browser_token: localBrowserToken,
+      p_passphrase: null,
+      p_new_name: profile.name,
+      p_new_color: profile.color,
+      p_new_favorite_book_id: result.book_id,
+      p_new_favorite_note: profile.favoriteNote ?? null,
+      p_new_passphrase: profile.passphrase ?? null,
+    },
+  );
+
+  if (favoriteError) {
+    console.error("favorite update after book create failed:", favoriteError);
+  } else {
+    const nextProfile = {
+      ...profile,
+      favoriteBookId: result.book_id,
+    };
+    setProfile(nextProfile);
+    localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
+  }
+}
+
+setAddBookOpen(false);
+setAddBookIntent("normal");
+await loadAll({ silent: true });
+
+if (shouldReturnToProfile) {
+  setProfileDialogOpen(true);
+  return;
+}
+
+setPage({
+  type: "room",
+  bookId: result.book_id,
+  roomId: result.room_id,
+});
 
 const createRoom = async (payload: {
     title: string;
@@ -1373,11 +1414,13 @@ const leaveTrace = async (body: string) => {
   isExistingProfile={myProfileId !== null}
   books={books}
   onSave={saveProfile}
-  onClose={() => {
-    setProfileDialogOpen(false);
-    setPendingEntry(null);
-  }}
-  onRequestAddBook={() => setAddBookOpen(true)}
+onClose={() => {
+  setProfileDialogOpen(false);
+  setPendingEntry(null);
+  setPendingAddBook(false);
+  setAddBookIntent("normal");
+}}
+  onRequestAddBook={() => handleOpenAddBook("favorite")}
   onRequestTransfer={() => {
     setProfileDialogOpen(false);
     setTransferOpen(true);
