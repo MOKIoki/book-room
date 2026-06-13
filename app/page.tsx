@@ -929,6 +929,7 @@ setPage({
   bookId: result.book_id,
   roomId: result.room_id,
 });
+};
 
 const createRoom = async (payload: {
     title: string;
