@@ -829,22 +829,21 @@ const handleOpenMyLog = () => {
     return true;
   };
 
-  const handleEnterRoom = (bookId: string, roomId: number) => {
-    if (!profile) {
-      setPendingEntry({ bookId, roomId });
-      setProfileDialogOpen(true);
-      return;
-    }
-    setPage({ type: "room", bookId, roomId });
-  };
+const handleEnterRoom = (bookId: string, roomId: number) => {
+  if (!profile) {
+    setPendingEntry({ bookId, roomId });
+    setProfileDialogOpen(true);
+    return;
+  }
+  setPage({ type: "room", bookId, roomId });
 };
-  // 本を追加するときは、必ず「最初の部屋」と「最初の投稿」まで一緒に作る。
-  // 本だけが増えて会話の入口が無い状態を作らないための方針。
-  const createBook = async (payload: {
-    title: string;
-    author: string;
-    firstMessage: string;
-  }) => {
+
+// 本を追加するときは、必ず「最初の部屋」と「最初の投稿」まで一緒に作る。
+const createBook = async (payload: {
+  title: string;
+  author: string;
+  firstMessage: string;
+}) => {
     if (!profile) {
       alert("本を追加するには、先に名前を設定してください。");
       setPendingAddBook(true);
