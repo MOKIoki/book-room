@@ -837,7 +837,7 @@ const handleOpenMyLog = () => {
     }
     setPage({ type: "room", bookId, roomId });
   };
-
+};
   // 本を追加するときは、必ず「最初の部屋」と「最初の投稿」まで一緒に作る。
   // 本だけが増えて会話の入口が無い状態を作らないための方針。
   const createBook = async (payload: {
