@@ -59,6 +59,7 @@ export default function NameSetupDialog({
   const [favoriteNote, setFavoriteNote] = useState<string>(
     initialFavoriteNote ?? "",
   );
+  const [favoriteQuery, setFavoriteQuery] = useState("");
   const [passphrase, setPassphrase] = useState<string>(initialPassphrase ?? "");
   const [mode, setMode] = useState<"create" | "claim">("create");  // X1: モード切替
   useEffect(() => {
@@ -80,7 +81,17 @@ export default function NameSetupDialog({
     () => [...books].sort((a, b) => a.title.localeCompare(b.title, "ja")),
     [books],
   );
+const filteredBooks = useMemo(() => {
+  const q = favoriteQuery.trim().toLowerCase();
+  if (!q) return sortedBooks;
 
+  return sortedBooks.filter((book) => {
+    return (
+      book.title.toLowerCase().includes(q) ||
+      (book.author ?? "").toLowerCase().includes(q)
+    );
+  });
+}, [sortedBooks, favoriteQuery]);
   return (
     <Dialog
       open={open}
@@ -153,40 +164,76 @@ export default function NameSetupDialog({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>お気に入りの本(任意)</Label>
-                <div className="flex gap-2">
-                  <select
-                    value={favoriteBookId}
-                    onChange={(e) => setFavoriteBookId(e.target.value)}
-                    className="h-10 min-w-0 flex-1 rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
-                  >
-                    <option value="">選択しない</option>
-                    {sortedBooks.map((book) => (
-                      <option key={book.id} value={book.id}>
-                        {book.title}
-                        {book.author ? ` / ${book.author}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  {onRequestAddBook && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0 rounded-2xl"
-                      onClick={onRequestAddBook}
-                      aria-label="本を追加"
-                      title="本を追加"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-neutral-500">
-                  プロフィール欄に「お気に入りの1冊」として表示されます。
-                </p>
-              </div>
+<div className="space-y-2">
+  <Label>お気に入りの本(任意)</Label>
+
+  <Input
+    value={favoriteQuery}
+    onChange={(e) => setFavoriteQuery(e.target.value)}
+    placeholder="本の名前・著者名で探す"
+    className="rounded-2xl"
+  />
+
+  {favoriteQuery.trim() && (
+    <div className="max-h-40 overflow-y-auto rounded-2xl border border-neutral-200 bg-white text-sm shadow-sm">
+      {filteredBooks.length === 0 ? (
+        <div className="px-3 py-2 text-neutral-500">
+          見つかりませんでした
+        </div>
+      ) : (
+        filteredBooks.slice(0, 8).map((book) => (
+          <button
+            key={book.id}
+            type="button"
+            onClick={() => {
+              setFavoriteBookId(book.id);
+              setFavoriteQuery("");
+            }}
+            className="block w-full px-3 py-2 text-left hover:bg-neutral-50"
+          >
+            <div className="font-medium">{book.title}</div>
+            {book.author && (
+              <div className="text-xs text-neutral-500">{book.author}</div>
+            )}
+          </button>
+        ))
+      )}
+    </div>
+  )}
+
+  <div className="flex gap-2">
+    <select
+      value={favoriteBookId}
+      onChange={(e) => setFavoriteBookId(e.target.value)}
+      className="h-10 min-w-0 flex-1 rounded-2xl border border-neutral-200 bg-white px-3 text-sm"
+    >
+      <option value="">選択しない</option>
+      {filteredBooks.map((book) => (
+        <option key={book.id} value={book.id}>
+          {book.title}
+          {book.author ? ` / ${book.author}` : ""}
+        </option>
+      ))}
+    </select>
+    {onRequestAddBook && (
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="shrink-0 rounded-2xl"
+        onClick={onRequestAddBook}
+        aria-label="本を追加"
+        title="本を追加"
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    )}
+  </div>
+
+  <p className="text-xs text-neutral-500">
+    プロフィール欄に「お気に入りの1冊」として表示されます。
+  </p>
+</div>
 
               {favoriteBookId && (
                 <div className="space-y-2">
