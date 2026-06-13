@@ -347,15 +347,14 @@ const hasFavorites =
 
   setProfile(nextProfile);
   localStorage.setItem("book-room-profile", JSON.stringify(nextProfile));
-    if (pendingEntry) {
-setPage({
-  type: "room",
-  bookId: result.book_id,
-  roomId: result.room_id,
-});
-};
-      setPendingEntry(null);
-    }
+if (pendingEntry) {
+  setPage({
+    type: "room",
+    bookId: pendingEntry.bookId,
+    roomId: pendingEntry.roomId,
+  });
+  setPendingEntry(null);
+}
     if (pendingAddBook) {
       setAddBookOpen(true);
       setPendingAddBook(false);
