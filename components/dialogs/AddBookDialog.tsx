@@ -64,8 +64,7 @@ const duplicateCandidates = useMemo(() => {
   const normalizedTitle = normalizeText(title);
   const normalizedAuthor = normalizeText(author);
 
-if (!normalizedTitle) return [];
-if (normalizedTitle.length < 2 && !normalizedAuthor) return [];
+if (normalizedTitle.length < 2) return [];
 
   return books
     .map((book) => {
@@ -87,17 +86,9 @@ if (normalizedTitle.length < 2 && !normalizedAuthor) return [];
           bookAuthor.includes(normalizedAuthor) ||
           normalizedAuthor.includes(bookAuthor));
 
-const shortTitleSameAuthor =
-  authorClose &&
-  normalizedTitle.length > 0 &&
-  normalizedTitle.length <= 4 &&
-  bookTitle.length > 0 &&
-  bookTitle.length <= 6;
+if (!titleClose) return null;
 
-if (!titleClose && !shortTitleSameAuthor) return null;
-
-const score =
-  titleExact && authorClose ? 3 : titleExact ? 2 : titleClose ? 1 : 0;
+const score = titleExact && authorClose ? 3 : titleExact ? 2 : 1;
 
 return { ...book, score };
     })
