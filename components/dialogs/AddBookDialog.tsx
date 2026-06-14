@@ -162,19 +162,7 @@ const duplicateCandidates = useMemo(() => {
                 className="rounded-2xl"
               />
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>この本を読んで、最初に出てくることばは?</Label>
-              <Textarea
-                value={firstMessage}
-                onChange={(e) => setFirstMessage(e.target.value)}
-                placeholder="一言でも、長くても OK。"
-                className="min-h-[120px] rounded-2xl"
-              />
-            </div>
-            {duplicateCandidates.length > 0 && (
+                        {duplicateCandidates.length > 0 && (
   <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
     <p className="font-medium">すでに近い本があるかもしれません</p>
     <div className="mt-2 space-y-1">
@@ -192,6 +180,20 @@ const duplicateCandidates = useMemo(() => {
     </p>
   </div>
 )}
+
+          </div>
+        ) : (
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>この本を読んで、最初に出てくることばは?</Label>
+              <Textarea
+                value={firstMessage}
+                onChange={(e) => setFirstMessage(e.target.value)}
+                placeholder="一言でも、長くても OK。"
+                className="min-h-[120px] rounded-2xl"
+              />
+            </div>
+
             <p className="text-xs text-neutral-500">
               この投稿が「{title || "この本"}」の最初の部屋のきっかけになります。
             </p>
