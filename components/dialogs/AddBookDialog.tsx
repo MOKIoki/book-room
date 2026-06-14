@@ -203,7 +203,7 @@ return { ...book, score };
 )}
             {sameAuthorCandidates.length > 0 && (
   <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-800">
-    <p className="font-medium">この著者の本はすでにあります</p>
+    <p className="font-medium">この著者の本がすでにあります</p>
     <div className="mt-2 space-y-1">
       {sameAuthorCandidates.map((book) => (
         <div key={book.id} className="text-xs">
