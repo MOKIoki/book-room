@@ -1369,11 +1369,12 @@ const leaveTrace = async (body: string) => {
         onCreate={createRoom}
       />
 
-      <AddBookDialog
-        open={addBookOpen}
-        onOpenChange={setAddBookOpen}
-        onCreate={createBook}
-      />
+<AddBookDialog
+  open={addBookOpen}
+  onOpenChange={setAddBookOpen}
+  books={visibleBooks}
+  onCreate={createBook}
+/>
 
       <MyLogDialog
         open={myLogOpen}
