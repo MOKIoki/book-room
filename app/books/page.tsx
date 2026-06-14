@@ -277,11 +277,12 @@ window.location.href = `/b/${result.book_id}/r/${result.room_id}?from=books`;
         )}
       </div>
 
-      <AddBookDialog
-        open={addBookOpen}
-        onOpenChange={setAddBookOpen}
-        onCreate={createBook}
-      />
+<AddBookDialog
+  open={addBookOpen}
+  onOpenChange={setAddBookOpen}
+  books={books}
+  onCreate={createBook}
+/>
 
       <NameSetupDialog
         open={profileDialogOpen}
