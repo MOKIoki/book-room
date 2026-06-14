@@ -105,6 +105,27 @@ return { ...book, score };
     .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title, "ja"))
     .slice(0, 3);
 }, [author, books, title]);
+  const sameAuthorCandidates = useMemo(() => {
+  const normalizedTitle = normalizeText(title);
+  const normalizedAuthor = normalizeText(author);
+
+  if (!normalizedTitle || normalizedAuthor.length < 2) return [];
+  if (duplicateCandidates.length > 0) return [];
+
+  return books
+    .filter((book) => {
+      const bookAuthor = normalizeText(book.author ?? "");
+      if (!bookAuthor) return false;
+
+      return (
+        bookAuthor === normalizedAuthor ||
+        bookAuthor.includes(normalizedAuthor) ||
+        normalizedAuthor.includes(bookAuthor)
+      );
+    })
+    .sort((a, b) => a.title.localeCompare(b.title, "ja"))
+    .slice(0, 3);
+}, [author, books, duplicateCandidates.length, title]);
   
   const goNext = () => {
     if (!title.trim()) {
@@ -177,6 +198,24 @@ return { ...book, score };
     </div>
     <p className="mt-2 text-xs text-amber-800">
       同じ本なら、既存の本ページを使ってください。別の本ならこのまま追加できます。
+    </p>
+  </div>
+)}
+            {sameAuthorCandidates.length > 0 && (
+  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-800">
+    <p className="font-medium">この著者の本はすでにあります</p>
+    <div className="mt-2 space-y-1">
+      {sameAuthorCandidates.map((book) => (
+        <div key={book.id} className="text-xs">
+          <span className="font-medium">{book.title}</span>
+          {book.author && (
+            <span className="text-neutral-600"> / {book.author}</span>
+          )}
+        </div>
+      ))}
+    </div>
+    <p className="mt-2 text-xs text-neutral-600">
+      同じ本を追加しようとしていないか、念のため確認してください。別の本ならこのまま追加できます。
     </p>
   </div>
 )}
