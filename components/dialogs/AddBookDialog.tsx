@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 type AddBookDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  books: { id: string; title: string; author: string | null }[];
   /**
    * 本を追加した直後に、最初の部屋を自動作成して最初の投稿を入れる。
    * 引数は必須 3 点のみ。description は後から編集する運用。
@@ -30,6 +31,7 @@ type AddBookDialogProps = {
 export default function AddBookDialog({
   open,
   onOpenChange,
+  books,
   onCreate,
 }: AddBookDialogProps) {
   const [step, setStep] = useState<1 | 2>(1);
@@ -48,7 +50,62 @@ export default function AddBookDialog({
       setSubmitting(false);
     }
   }, [open]);
+const normalizeText = (value: string) =>
+  value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(
+      /[\s\u3000・･\.．,，、。:：;；!！?？'’"“”\-ー―—_＿/／\\\[\]［］()（）【】「」『』]/g,
+      "",
+    )
+    .trim();
 
+const duplicateCandidates = useMemo(() => {
+  const normalizedTitle = normalizeText(title);
+  const normalizedAuthor = normalizeText(author);
+
+  if (normalizedTitle.length < 2) return [];
+
+  return books
+    .map((book) => {
+      const bookTitle = normalizeText(book.title);
+      const bookAuthor = normalizeText(book.author ?? "");
+
+      const titleExact = bookTitle === normalizedTitle;
+      const titleClose =
+        titleExact ||
+        bookTitle.includes(normalizedTitle) ||
+        normalizedTitle.includes(bookTitle);
+
+      const authorExact =
+        Boolean(normalizedAuthor) && bookAuthor === normalizedAuthor;
+      const authorClose =
+        Boolean(normalizedAuthor) &&
+        Boolean(bookAuthor) &&
+        (authorExact ||
+          bookAuthor.includes(normalizedAuthor) ||
+          normalizedAuthor.includes(bookAuthor));
+
+      if (!titleClose) return null;
+
+      const score = titleExact && authorClose ? 3 : titleExact ? 2 : 1;
+
+      return { ...book, score };
+    })
+    .filter(
+      (
+        book,
+      ): book is {
+        id: string;
+        title: string;
+        author: string | null;
+        score: number;
+      } => book !== null,
+    )
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title, "ja"))
+    .slice(0, 3);
+}, [author, books, title]);
+  
   const goNext = () => {
     if (!title.trim()) {
       alert("本のタイトルを入力してください");
@@ -117,6 +174,24 @@ export default function AddBookDialog({
                 className="min-h-[120px] rounded-2xl"
               />
             </div>
+            {duplicateCandidates.length > 0 && (
+  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+    <p className="font-medium">すでに近い本があるかもしれません</p>
+    <div className="mt-2 space-y-1">
+      {duplicateCandidates.map((book) => (
+        <div key={book.id} className="text-xs">
+          <span className="font-medium">{book.title}</span>
+          {book.author && (
+            <span className="text-amber-800"> / {book.author}</span>
+          )}
+        </div>
+      ))}
+    </div>
+    <p className="mt-2 text-xs text-amber-800">
+      同じ本なら、既存の本ページを使ってください。別の本ならこのまま追加できます。
+    </p>
+  </div>
+)}
             <p className="text-xs text-neutral-500">
               この投稿が「{title || "この本"}」の最初の部屋のきっかけになります。
             </p>
